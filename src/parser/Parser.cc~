@@ -1,0 +1,406 @@
+#include "Parser.hh"
+
+#include <string>
+#include <cstring>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include <iomanip>
+#include <cstdlib>
+
+namespace parser_ns
+{
+    using namespace std;
+
+    Parser::
+    Parser(string &folder)
+    {
+        folder_ = folder;
+        
+        system(("mkdir -p " + folder_).c_str());
+    }
+
+    void Parser::
+    set_folder(string folder)
+    {
+        folder_ = folder;
+
+        system(("mkdir -p " + folder_).c_str());
+    }
+    
+    unsigned Parser::
+    parse_data(unsigned &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+    
+        ifstream data_file(data_path.c_str());
+    
+        if (data_file.is_open())
+        {
+            data_file >> data;
+
+            return 0;
+        }
+        else
+        {
+            cout << "unable to load " << data_filename << endl;
+
+            return 1;
+        }
+    }
+
+    unsigned Parser::
+    parse_data(double &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+    
+        ifstream data_file(data_path.c_str());
+    
+        if (data_file.is_open())
+        {
+            data_file >> data;
+
+            return 0;
+        }
+        else
+        {
+            cout << "unable to load " << data_filename << endl;
+
+            return 1;
+        }
+    }
+
+    unsigned Parser::
+    parse_data(vector<unsigned> &data, string data_filename)
+    {
+        data.resize(0);
+        
+        string data_path = get_filepath(data_filename);
+        
+        ifstream data_file(data_path.c_str());
+        
+        if (data_file.is_open())
+        {
+            unsigned temp;
+            
+            while (data_file >> temp)
+            {
+                data.push_back(temp);
+            }
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to load " << data_filename << endl;
+            
+            return 1;
+        }
+    }
+    
+    unsigned Parser::
+    parse_data(vector<double> &data, string data_filename)
+    {
+        data.resize(0);
+    
+        string data_path = get_filepath(data_filename);
+    
+        ifstream data_file(data_path.c_str());
+    
+        if (data_file.is_open())
+        {
+            double temp;
+        
+            while (data_file >> temp)
+            {
+                data.push_back(temp);
+            }
+
+            return 0;
+        }
+        else
+        {
+            cout << "unable to load " << data_filename << endl;
+
+            return 1;
+        }
+    }
+
+    unsigned Parser::
+    parse_data(vector<string> &data, string data_filename)
+    {
+        data.resize(0);
+        
+        string data_path = get_filepath(data_filename);
+        
+        ifstream data_file(data_path.c_str());
+    
+        if (data_file.is_open())
+        {
+            string temp;
+        
+            while (data_file >> temp)
+            {
+                data.push_back(temp);
+            }
+
+            return 0;
+        }
+        else
+        {
+            cout << "unable to load " << data_filename << endl;
+
+            return 1;
+        }
+    }
+
+    unsigned Parser::
+    write_data(bool &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+        
+        ofstream data_file(data_path.c_str());
+    
+        if (data_file.is_open())
+        {
+            data_file << data;
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to save to " << data_filename << endl;
+
+            return 1;
+        }
+    }
+
+    unsigned Parser::
+    write_data(int &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+        
+        ofstream data_file(data_path.c_str());
+    
+        if (data_file.is_open())
+        {
+            data_file << data;
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to save to " << data_filename << endl;
+
+            return 1;
+        }
+    }
+
+    unsigned Parser::
+    write_data(unsigned &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+        
+        ofstream data_file(data_path.c_str());
+    
+        if (data_file.is_open())
+        {
+            data_file << data;
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to save to " << data_filename << endl;
+
+            return 1;
+        }
+    }
+
+    unsigned Parser::
+    write_data(double &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+        
+        ofstream data_file(data_path.c_str());
+    
+        if (data_file.is_open())
+        {
+            data_file << data;
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to save to " << data_filename << endl;
+
+            return 1;
+        }
+    }
+
+    unsigned Parser::
+    write_data(string &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+        
+        ofstream data_file(data_path.c_str());
+    
+        if (data_file.is_open())
+        {
+            data_file << data;
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to save to " << data_filename << endl;
+
+            return 1;
+        }
+    }
+    
+    unsigned Parser::
+    write_data(vector<bool> &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+    
+        ofstream data_file(data_path.c_str());
+        
+        if (data_file.is_open())
+        {
+            for (unsigned i = 0; i < data.size(); ++i)
+            {
+                data_file << data[i] << endl;
+            }
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to save to " << data_filename << endl;
+            
+            return 1;
+        }
+    }
+
+    unsigned Parser::
+    write_data(vector<unsigned> &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+    
+        ofstream data_file(data_path.c_str());
+        
+        if (data_file.is_open())
+        {
+            for (unsigned i = 0; i < data.size(); ++i)
+            {
+                data_file << data[i] << endl;
+            }
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to save to " << data_filename << endl;
+            
+            return 1;
+        }
+    }
+    
+    unsigned Parser::
+    write_data(vector<double> &data, string data_filename)
+    {
+        string data_path = get_filepath(data_filename);
+    
+        ofstream data_file(data_path.c_str());
+        
+        if (data_file.is_open())
+        {
+            for (unsigned i = 0; i < data.size(); ++i)
+            {
+                data_file << data[i] << endl;
+            }
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to save to " << data_filename << endl;
+            
+            return 1;
+        }
+    }
+
+        unsigned Parser::
+        write_data(vector<string> &data, string data_filename)
+        {
+        string data_path = get_filepath(data_filename);
+    
+        ofstream data_file(data_path.c_str());
+        
+        if (data_file.is_open())
+        {
+            for (unsigned i = 0; i < data.size(); ++i)
+            {
+                data_file << data[i] << endl;
+            }
+            
+            return 0;
+        }
+        else
+        {
+            cout << "unable to save to " << data_filename << endl;
+            
+            return 1;
+        }
+    }
+    
+    string Parser::
+    get_filepath(string &data_filename)
+    {
+        return folder_ + "/" + data_filename;
+    }
+
+    void print_usage_info()
+    {
+        cout << "usage: mpirun -n [number_of_processors] rabbit -i [input_folder] -o [output_folder]" << endl;
+    }
+
+    void print_help_info()
+    {
+#define NUMBER_OF_DATA_FILES 16
+#define NUMBER_OF_VALUES 3
+
+        unsigned width[NUMBER_OF_VALUES] = {20,15,40};
+    
+        string files[NUMBER_OF_DATA_FILES][NUMBER_OF_VALUES] =
+            {{"number_of_cells", "int", "1"},
+             {"number_of_regions", "int", "1"},
+             {"number_of_groups", "int", "1"},
+             {"number_of_ordinates", "int", "1"},
+             {"number_of_nodes", "int", "1"},
+             {"max_iterations", "int", "1"},
+             {"tolerance", "double", "1"},
+             {"number_of_cells_per_region", "vector<unsigned>", "number_of_regions"},
+             {"region_coordinates", "vector<double>", "number_of_regions + 1"},
+             {"internal_source", "vector<double>", "number_of_(regions * groups)"},
+             {"boundary_sources", "vector<double>", "number_of_ordinates"},
+             {"sigma_t", "vector<double>", "number_of_(regions * groups)"},
+             {"sigma_s", "vector<double>", "number_of_(regions * groups ^ 2)"},
+             {"nu_sigma_f","vector<double>", "number_of_(regions * groups)"},
+             {"chi","vector<double>", "number_of_(regions * groups)"},
+             {"boundary_conditions", "vector<string>", "2"}};
+        
+        cout << "Required files in input folder:" << endl;
+        cout << setw(width[0]) << "file" << setw(width[1]) << "type" << setw(width[2]) << "size" << endl;
+    
+        for (unsigned i = 0; i < NUMBER_OF_DATA_FILES; ++i)
+        {
+            for (unsigned j = 0; j < NUMBER_OF_VALUES; ++j)
+            {
+                cout << setw(width[j]) << files[i][j] << "\t";
+            }
+            cout << endl;
+        }
+    }
+}
