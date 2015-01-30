@@ -48,37 +48,4 @@ namespace mesh_ns
     {
     }
     
-    inline unsigned Mesh::
-    number_of_dimensions()
-    {
-        return number_of_dimensions_;
-    }
-    inline unsigned Mesh::
-    number_of_cells()
-    {
-        return number_of_cells_;
-    }
-    inline unsigned Mesh::
-    number_of_nodes()
-    {
-        return number_of_nodes_;
-    }
-
-    inline double Mesh::
-    cell_length(unsigned &cell)
-    {
-        return elements_[cell].cell_length();
-    }
-
-    inline double Mesh::
-    stiffness(unsigned &cell, unsigned a, unsigned b)
-    {
-        return elements_[cell].stiffness(a, b);
-    }
-
-    inline double Mesh::
-    stiffness_moment(unsigned &cell, unsigned a, unsigned b)
-    {
-        return elements_[cell].stiffness_moment(a, b);
-    }
 }

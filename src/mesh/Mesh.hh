@@ -32,14 +32,35 @@ namespace mesh_ns
         //      unsigned number_of_cells,
         //      vector<double> &cell_boundaries);
 
-        inline unsigned number_of_dimensions();
-        inline unsigned number_of_cells();
-        inline unsigned number_of_nodes();
+        inline unsigned number_of_dimensions()
+        {
+            return number_of_dimensions_;
+        }
+        
+        inline unsigned number_of_cells()
+        {
+            return number_of_cells_;
+        }
+        
+        inline unsigned number_of_nodes()
+        {
+            return number_of_nodes_;
+        }
 
-        inline double cell_length(unsigned &cell);
+        inline double cell_length(unsigned cell)
+        {
+            return elements_[cell].cell_length(0);
+        }
 
-        inline double stiffness(unsigned &cell, unsigned a, unsigned b);
-        inline double stiffness_moment(unsigned &cell, unsigned a, unsigned b);
+        inline double stiffness(unsigned cell, unsigned a, unsigned b)
+        {
+            return elements_[cell].stiffness(a, b);
+        }
+
+        inline double stiffness_moment(unsigned cell, unsigned a, unsigned b)
+        {
+            return elements_[cell].stiffness_moment(a, b);
+        }
     };
 }
 

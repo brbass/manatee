@@ -3,6 +3,13 @@
 
 #include <vector>
 
+#include <Epetra_MpiComm.h>
+#include <Epetra_Map.h>
+#include <Epetra_CrsMatrix.h>
+#include <Epetra_MultiVector.h>
+#include <Epetra_LinearProblem.h>
+#include <Amesos.h>
+
 #include "Data.hh"
 #include "Mesh.hh"
 
@@ -19,6 +26,9 @@ namespace transport_ns
         SPn_Transport(unsigned number_of_moments,
                       Data &data,
                       Mesh &mesh);
+
+        ~SPn_Transport();
+        
         int solve();
         
     private:
@@ -62,10 +72,9 @@ namespace transport_ns
         int initialize_solver();
         int initialize_transport();
         
-        double compute_c1(unsigned &cell, unsigned &group, unsigned &moment);
-        double compute_c2(unsigned &cell, unsigned &group, unsigned &moment);
-        double compute_c3(unsigned &cell, unsigned &group, unsigned &moment);
-        double compute_c4(unsigned &cell, unsigned &group, unsigned &moment);
+        double compute_k1(unsigned cell, unsigned group, unsigned moment);
+        double compute_k2(unsigned cell, unsigned group, unsigned moment);
+        double compute_k3(unsigned cell, unsigned group, unsigned moment);
     };
 }
 #endif

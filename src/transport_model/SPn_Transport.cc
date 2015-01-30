@@ -1,6 +1,7 @@
 #include "SPn_Transport.hh"
 
-#include <math>
+#include <cmath>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -18,7 +19,7 @@
 
 namespace transport_ns
 {
-    using std::vector;
+    using namespace std;
     using namespace data_ns;
     using namespace mesh_ns;
     
@@ -54,10 +55,10 @@ namespace transport_ns
     int SPn_Transport::
     initialize_matrix()
     {
-        matrix_.resize(0);
+        matrix_.clear();
         
         num_my_elements_ = map_->NumMyElements();
-        my_global_elements_.assign(map_->MyGlobalElements(), map_->MyGlobalElements() + n);
+        my_global_elements_.assign(map_->MyGlobalElements(), map_->MyGlobalElements() + num_my_elements_);
         
         unsigned num_diagonals = 3;
         
@@ -89,17 +90,17 @@ namespace transport_ns
             {
                 Epetra_CrsMatrix matrix (Copy, *map_, &num_entries_per_row_[0], true);
                 
-                for (int i = 0; i < num_my_elements_; ++i)
+                for (unsigned i = 0; i < num_my_elements_; ++i)
                 {
                     vector<int> indices(num_entries_per_row_[i], 0);
                     vector<double> values(num_entries_per_row_[i], 0);
                     
-                    int j = my_global_elements_[i];
+                    unsigned j = my_global_elements_[i];
                     unsigned k = 0;
                     
                     for (int l = 0; l < row_map_.size(); ++l)
                     {
-                        int index = j + row_map[l];
+                        int index = j + row_map_[l];
                         
                         if (index >= 0 && index < num_global_elements_)
                         {
@@ -111,32 +112,28 @@ namespace transport_ns
                     if (j == 0)
                     {
                         double k1 = compute_k1(j, g, n);
-                        double k4 = compute_k4(j, g, n);
                         
-                        values[0] = k1 * mesh_.stiffness_moment(j,1,1) + k4 * mesh_.stiffness(j,1,1);
-                        values[1] = k1 * mesh_.stiffness_moment(j,2,1) + k4 * mesh_.stiffness(j,2,1);
+                        values[0] = k1 * mesh_.stiffness_moment(j,1,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,1,1);
+                        values[1] = k1 * mesh_.stiffness_moment(j,2,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,2,1);
                     }
                     else if (j == num_global_elements_ - 1)
                     {
                         double k1 = compute_k1(j-1, g, n);
-                        double k4 = compute_k4(j-1, g, n);
                         
-                        values[0] = k1 * mesh_.stiffness_moment(j-1,1,2) + k4 * mesh_.stiffness(j-1,1,2);
-                        values[1] = k1 * mesh_.stiffness_moment(j-1,2,2) + k4 * mesh_.stiffness(j-1,2,2);
+                        values[0] = k1 * mesh_.stiffness_moment(j-1,1,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,1,2);
+                        values[1] = k1 * mesh_.stiffness_moment(j-1,2,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,2,2);
                     }
                     else
                     {
                         double k1a = compute_k1(j-1, g, n);
-                        double k4a = compute_k4(j-1, g, n);
                         double k1b = compute_k1(j, g, n);
-                        double k4b = compute_k4(j, g, n);
                         
-                        values[0] = k1a * mesh_.stiffness_moment(j-1,1,2) + k4a * mesh_.stiffness(j-1,1,2);
-                        values[1] = k1a * mesh_.stiffness_moment(j-1,2,2) + k4a * mesh_.stiffness(j-1,2,2) + k1b * mesh_.stiffness_moment(j,1,1) + k4b * mesh_.stiffness(j,1,1);
-                        values[2] = k1b * mesh_.stiffness_moment(j,2,1) + k4b * mesh_.stiffness(j,2,1);
+                        values[0] = k1a * mesh_.stiffness_moment(j-1,1,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,1,2);
+                        values[1] = k1a * mesh_.stiffness_moment(j-1,2,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,2,2) + k1b * mesh_.stiffness_moment(j,1,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,1,1);
+                        values[2] = k1b * mesh_.stiffness_moment(j,2,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,2,1);
                     }
                     
-                    matrix_->InsertGlobalValues(j, num_entries_per_row_[i], &values[0], &indices[0]);
+                    matrix.InsertGlobalValues(j, num_entries_per_row_[i], &values[0], &indices[0]);
                 }
 
                 matrix.FillComplete();
@@ -151,13 +148,13 @@ namespace transport_ns
     int SPn_Transport::
     initialize_lhs()
     {
-        lhs.resize(0);
+        lhs_.clear();
         
         for (unsigned m = 0; m < number_of_moments_; ++m)
         {
-            for (unsigned g = 0; g < number_of_groups_; ++g)
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                lhs_.push_back(Epetra_MultiVector(*map_, num_vectors_));
+                lhs_.emplace_back(*map_, num_vectors_);
                 
                 lhs_.back().PutScalar(1.0);
             }
@@ -169,13 +166,13 @@ namespace transport_ns
     int SPn_Transport::
     initialize_rhs()
     {
-        rhs.resize(0);
-            
+        rhs_.clear();
+        
         for (unsigned m = 0; m < number_of_moments_; ++m)
         {
-            for (unsigned g = 0; g < number_of_groups_; ++g)
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                rhs_.push_back(Epetra_MultiVector(*map_, num_vectors_));
+                rhs_.emplace_back(*map_, num_vectors_);
                 
                 rhs_.back().PutScalar(1.0);
             }
@@ -187,22 +184,21 @@ namespace transport_ns
     int SPn_Transport::
     calculate_rhs()
     {
-
         return 0;
     }
 
     int SPn_Transport::
     initialize_problem()
     {
-        problem_.resize(0);
+        problem_.clear();
         
         for (unsigned m = 0; m < number_of_moments_; ++m)
         {
-            for (unsigned g = 0; g < number_of_groups_; ++g)
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                unsigned k = g + number_of_groups_ * m;
+                unsigned k = g + data_.number_of_groups() * m;
 
-                problem_.push_back(Epetra_LinearProblem(&matrix_[k], &lhs_[k], &rhs_[k]));
+                problem_.emplace_back(&matrix_[k], &lhs_[k], &rhs_[k]);
             }
         }
 
@@ -212,13 +208,13 @@ namespace transport_ns
     int SPn_Transport::
     initialize_solver()
     {
-        solver_.resize(0);
+        solver_.clear();
         
         for (unsigned m = 0; m < number_of_moments_; ++m)
         {
-            for (unsigned g = 0; g < number_of_groups_; ++g)
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                unsigned k = g + number_of_groups_ * m;
+                unsigned k = g + data_.number_of_groups() * m;
 
                 solver_.push_back(factory_.Create(solver_type_, problem_[k]));
                 
@@ -241,12 +237,12 @@ namespace transport_ns
     int SPn_Transport::
     initialize_transport()
     {
-        num_global_elements_ = data_.number_of_cells() + 1;
+        num_global_elements_ = mesh_.number_of_cells() + 1;
         
         comm_ = new Epetra_MpiComm(MPI_COMM_WORLD);
         map_ = new Epetra_Map(num_global_elements_, index_base_, *comm_);
         
-        initialize_matrices();
+        initialize_matrix();
         initialize_lhs();
         initialize_rhs();
         initialize_problem();
@@ -256,7 +252,7 @@ namespace transport_ns
     }
 
     double SPn_Transport::
-    compute_c1(unsigned &cell, unsigned &group, unsigned &moment)
+    compute_k1(unsigned cell, unsigned group, unsigned moment)
     {
         if (moment >= 2)
         {
@@ -271,7 +267,7 @@ namespace transport_ns
     }
     
     double SPn_Transport::
-    compute_c2(unsigned &cell, unsigned &group, unsigned &moment)
+    compute_k2(unsigned cell, unsigned group, unsigned moment)
     {
         if (moment >= 2)
         {
@@ -286,16 +282,10 @@ namespace transport_ns
     }
 
     double SPn_Transport::
-    compute_c3(unsigned &cell, unsigned &group, unsigned &moment)
+    compute_k3(unsigned cell, unsigned group, unsigned moment)
     {
         unsigned k = (moment + 2) / (moment + 1);
 
         return pow(2 / mesh_.cell_length(cell), 2) * (k * data_.d(cell, group, moment));
-    }
-
-    double SPn_Transport::
-    compute_c4(unsigned &cell, unsigned &group, unsigned &moment)
-    {
-        return data_.sigma_t(cell, group) - data_.sigma_t(cell, group, moment);
     }
 }

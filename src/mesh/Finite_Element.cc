@@ -12,18 +12,6 @@ namespace mesh_ns
     {
     }
 
-    inline double Finite_Element::
-    cell_center_position(unsigned &dimension)
-    {
-        return cell_center_position_[dimension];
-    }
-    
-    inline double Finite_Element::
-    cell_length()//unsigned &dimension)
-    {
-        return cell_length_[0];
-    }
-    
     double Finite_Element::
     stiffness(unsigned a, unsigned b)
     {
