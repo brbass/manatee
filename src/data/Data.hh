@@ -26,7 +26,9 @@ namespace data_ns
         vector<double> d_;
         
         vector<string> &boundary_conditions_;
-        
+
+        int check_size(unsigned vector_size, unsigned expected_size, string vector_name);
+
     public:
         
     Data(unsigned &number_of_cells,
@@ -41,6 +43,7 @@ namespace data_ns
          vector<string> &boundary_conditions);
 
         void compute_d();
+        int check();
         
         inline unsigned number_of_groups();
         inline unsigned number_of_scattering_moments();

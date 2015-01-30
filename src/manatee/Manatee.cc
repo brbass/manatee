@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
 
-#include "../neutronics/Neutronics.hh"
+#include <mpi.h>
+
+#include "Neutronics.hh"
 
 int main(int argc, char *argv[])
 {
@@ -14,7 +16,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    MPI_Init(&argc, &argv);
+    
     string input_folder = argv[1];
     
     Neutronics neutronics(input_folder);
+
+    MPI_Finalize();
 }

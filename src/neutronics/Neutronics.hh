@@ -4,9 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "../data/Data.hh"
-#include "../mesh/Mesh.hh"
-#include "../parser/Parser.hh"
+#include "Data.hh"
+#include "Mesh.hh"
 
 namespace neutronics_ns
 {
@@ -14,17 +13,14 @@ namespace neutronics_ns
     using std::vector;
     using namespace data_ns;
     using namespace mesh_ns;
-    using namespace parser_ns;
-
     
     class Neutronics
     {
         
     private:
 
-        Data *data;
-        Mesh *mesh;
-        Parser *parser;
+        Data *data_;
+        Mesh *mesh_;
 
         unsigned number_of_dimensions_;
         unsigned number_of_cells_;
@@ -43,14 +39,29 @@ namespace neutronics_ns
 
         vector<string> boundary_conditions_;
         
-        string &input_folder_;
+        string input_folder_;
         
     public:
 
         Neutronics(string &input_folder);
 
+        Neutronics(unsigned &number_of_dimensions,
+                   unsigned &number_of_cells,
+                   unsigned &number_of_groups,
+                   unsigned &number_of_scattering_moments,
+                   vector<unsigned> &number_of_cells_per_dimension,
+                   vector<double> &side_length,
+                   vector<double> &internal_source,
+                   vector<double> &boundary_sources,
+                   vector<double> &sigma_t,
+                   vector<double> &sigma_s,
+                   vector<double> &nu_sigma_f,
+                   vector<double> &chi,
+                   vector<string> &boundary_conditions);
+
         ~Neutronics();
-        
+
+        void solve();
     };
 }
 

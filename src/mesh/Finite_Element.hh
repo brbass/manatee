@@ -23,7 +23,9 @@ namespace mesh_ns
                        vector<double> cell_length_);
         
         inline double cell_center_position(unsigned &dimension);
-        inline double cell_length(unsigned &dimension);
+        inline double cell_length();//unsigned &dimension);
+        double stiffness(unsigned a, unsigned b);
+        double stiffness_moment(unsigned a, unsigned b);
     };
 }
 

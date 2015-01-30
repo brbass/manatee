@@ -26,6 +26,8 @@ namespace mesh_ns
              vector<unsigned> &number_of_cells_per_dimension,
              vector<double> &side_length);
 
+        int check();
+        
         // Mesh(unsigned &number_of_dimensions,
         //      unsigned number_of_cells,
         //      vector<double> &cell_boundaries);
@@ -33,6 +35,11 @@ namespace mesh_ns
         inline unsigned number_of_dimensions();
         inline unsigned number_of_cells();
         inline unsigned number_of_nodes();
+
+        inline double cell_length(unsigned &cell);
+
+        inline double stiffness(unsigned &cell, unsigned a, unsigned b);
+        inline double stiffness_moment(unsigned &cell, unsigned a, unsigned b);
     };
 }
 
