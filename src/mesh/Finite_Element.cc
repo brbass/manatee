@@ -2,6 +2,9 @@
 
 #include <vector>
 
+#include <iostream>
+using namespace std;
+
 namespace mesh_ns
 {
     Finite_Element::
@@ -11,30 +14,4 @@ namespace mesh_ns
         cell_length_(cell_length)
     {
     }
-
-    double Finite_Element::
-    stiffness(unsigned a, unsigned b)
-    {
-        if (a == b)
-        {
-            return 2 / 3;
-        }
-        else
-        {
-            return 1 / 3;
-        }
-    }
-    
-    double Finite_Element::
-    stiffness_moment(unsigned a, unsigned b)
-    {
-        if (a == b)
-        {
-            return 1 / 2;
-        }
-        else
-        {
-            return -1 / 2;
-        }
-    }   
 }

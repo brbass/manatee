@@ -3,32 +3,37 @@
 
 #include <vector>
 
-#include "Mesh.hh"
-
 namespace mesh_ns
 {
     using std::vector;
-    
+
     class Finite_Element
     {
         
     private:
         
-        Mesh *mesh_;
-        
         vector<double> cell_center_position_;
         vector<double> cell_length_;
         
     public:
-        
+
         Finite_Element(){}
         
-        Finite_Element(Mesh &mesh,
-                       vector<double> &cell_center_position,
-                       vector<double> &cell_length_);
+        Finite_Element(vector<double> cell_center_position,
+                       vector<double> cell_length_);
         
-        inline double cell_center_position(unsigned &dimension);
-        inline double cell_length(unsigned &dimension);
+        inline double cell_center_position(unsigned dimension)
+        {
+            return cell_center_position_[dimension];
+        }
+        
+        inline double cell_length(unsigned dimension)
+        {
+            return cell_length_[0];
+        }
+        
+        double stiffness(unsigned a, unsigned b);
+        double stiffness_moment(unsigned a, unsigned b);
     };
 }
 

@@ -27,13 +27,34 @@ namespace mesh_ns
             return cell_center_position_[dimension];
         }
         
-        inline double cell_length(unsigned dimension)
+        inline double cell_length()
         {
             return cell_length_[0];
         }
-        
-        double stiffness(unsigned a, unsigned b);
-        double stiffness_moment(unsigned a, unsigned b);
+
+        inline double stiffness(unsigned a, unsigned b)
+        {
+            if (a == b)
+            {
+                return 2.0 / 3.0;
+            }
+            else
+            {
+                return 1.0 / 3.0;
+            }
+        }
+    
+        inline double stiffness_moment(unsigned a, unsigned b)
+        {
+            if (a == b)
+            {
+                return 1.0 / 2.0;
+            }
+            else
+            {
+                return -1.0 / 2.0;
+            }
+        }   
     };
 }
 

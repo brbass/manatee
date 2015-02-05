@@ -2,28 +2,44 @@
 
 #include <vector>
 
-#include "Mesh.hh"
+#include <iostream>
+using namespace std;
 
 namespace mesh_ns
 {
     Finite_Element::
-    Finite_Element(Mesh &mesh,
-                   vector<double> cell_center_position,
+    Finite_Element(vector<double> cell_center_position,
                    vector<double> cell_length):
         cell_center_position_(cell_center_position),
         cell_length_(cell_length)
     {
-        mesh_ = &mesh;
+        cout << cell_center_position_[0] << endl;
+        cout << cell_length_[0] << endl;
     }
 
-    inline double Finite_Element::
-    cell_center_position(unsigned &dimension)
+    double Finite_Element::
+    stiffness(unsigned a, unsigned b)
     {
-        return cell_center_position_[dimension];
+        if (a == b)
+        {
+            return 2 / 3;
+        }
+        else
+        {
+            return 1 / 3;
+        }
     }
-    inline double Finite_Element::
-    cell_length(unsigned &dimension)
+    
+    double Finite_Element::
+    stiffness_moment(unsigned a, unsigned b)
     {
-        return cell_length_[dimension];
-    }
+        if (a == b)
+        {
+            return 1 / 2;
+        }
+        else
+        {
+            return -1 / 2;
+        }
+    }   
 }

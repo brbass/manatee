@@ -1,12 +1,15 @@
 #ifndef Mesh_hh
 #define Mesh_hh
 
+
+#include <string>
 #include <vector>
 
 #include "Finite_Element.hh"
 
 namespace mesh_ns
 {
+    using std::string;
     using std::vector;
 
     class Mesh
@@ -19,7 +22,9 @@ namespace mesh_ns
         unsigned number_of_nodes_ = 2;
         
         vector<Finite_Element> elements_;
-        
+
+        int check_size(unsigned vector_size, unsigned expected_size, string vector_name);
+
     public:
     
         Mesh(unsigned &number_of_dimensions,
@@ -46,12 +51,12 @@ namespace mesh_ns
         {
             return number_of_nodes_;
         }
-
+        
         inline double cell_length(unsigned cell)
         {
-            return elements_[cell].cell_length(0);
+            return elements_[cell].cell_length();
         }
-
+        
         inline double stiffness(unsigned cell, unsigned a, unsigned b)
         {
             return elements_[cell].stiffness(a, b);

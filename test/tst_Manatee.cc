@@ -1,20 +1,22 @@
 #include <iostream>
 #include <string>
 
+#include "mpi.h"
+
 #include "Neutronics.hh"
 
 int test_neutronics()
 {
     using namespace std;
     using namespace neutronics_ns;
-
+    
     unsigned checksum = 0;
     
     unsigned number_of_dimensions = 1;
     unsigned number_of_cells = 10;
     unsigned number_of_groups = 3;
-    unsigned number_of_scattering_moments = 2;
-
+    unsigned number_of_scattering_moments = 3;
+    
     vector<double> side_length(1, 2.0);
     vector<unsigned> number_of_cells_per_dimension(1, number_of_cells);
     vector<double> internal_source(number_of_cells * number_of_groups, 1.0);
@@ -40,6 +42,11 @@ int test_neutronics()
                 k = g1 + number_of_groups * (g2 + number_of_groups * (i + number_of_cells * m));
 
                 sigma_s[k] = 0.1 / number_of_groups;
+
+                m = 2;
+                k = g1 + number_of_groups * (g2 + number_of_groups * (i + number_of_cells * m));
+
+                sigma_s[k] = 0.05 / number_of_groups;
             }
         }
     }
@@ -65,9 +72,13 @@ int test_neutronics()
 
 int main(int argc, char *argv[])
 {
+    MPI_Init(&argc, &argv);
+
     unsigned checksum = 0;
     
     checksum += test_neutronics();
 
+    MPI_Finalize();
+    
     return checksum;
 }

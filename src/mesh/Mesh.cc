@@ -26,13 +26,11 @@ namespace mesh_ns
             
             for (unsigned i = 0; i < number_of_cells_; ++i)
             {
-                vector<double> cell_center_position(current_position, 1);
-                vector<double> cell_length(average_cell_length, 1);
-                
-                Finite_Element element(cell_center_position,
-                                       cell_length);
+                vector<double> cell_center_position(1, current_position);
+                vector<double> cell_length(1, average_cell_length);
 
-                elements_.push_back(element);
+                elements_.emplace_back(cell_center_position,
+                                       cell_length);
                 
                 current_position += average_cell_length;
             }
@@ -41,11 +39,37 @@ namespace mesh_ns
         {
             cout << "Only one dimension is supported" << endl;
         }
+
+        check();
     }
 
     int Mesh::
     check()
     {
+        int checksum = 0;
+        
+        checksum += check_size(elements_.size(), number_of_cells_, "number_of_cells");
+        
+        if (checksum != 0)
+        {
+            cout << "mesh checksum: " << checksum << endl;
+        }
+
+        return checksum;
     }
-    
+
+    int Mesh::
+    check_size(unsigned vector_size, unsigned expected_size, string vector_name)
+    {
+        if(vector_size != expected_size)
+        {
+            cout << vector_name << " | vector size: " << vector_size << " | expected size: " << expected_size << endl;
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
 }

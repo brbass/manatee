@@ -6,6 +6,7 @@
 
 #include "Data.hh"
 #include "Mesh.hh"
+#include "SPn_Transport.hh"
 
 namespace neutronics_ns
 {
@@ -13,6 +14,7 @@ namespace neutronics_ns
     using std::vector;
     using namespace data_ns;
     using namespace mesh_ns;
+    using namespace transport_ns;
     
     class Neutronics
     {
@@ -21,7 +23,8 @@ namespace neutronics_ns
 
         Data *data_;
         Mesh *mesh_;
-
+        SPn_Transport *transport_;
+        
         unsigned number_of_dimensions_;
         unsigned number_of_cells_;
         unsigned number_of_groups_;

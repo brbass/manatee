@@ -6,6 +6,7 @@
 #include "Data.hh"
 #include "Mesh.hh"
 #include "Parser.hh"
+#include "SPn_Transport.hh"
 
 namespace neutronics_ns
 {
@@ -13,6 +14,7 @@ namespace neutronics_ns
     using namespace data_ns;
     using namespace mesh_ns;
     using namespace parser_ns;
+    using namespace transport_ns;
     
     Neutronics::
     Neutronics(string &input_folder):
@@ -81,8 +83,12 @@ namespace neutronics_ns
                          nu_sigma_f,
                          chi,
                          boundary_conditions);
+
+        unsigned number_of_moments = (number_of_scattering_moments - 1) / 2;
         
-        
+        transport_ = new SPn_Transport(number_of_moments,
+                                       *data_,
+                                       *mesh_);
     }
     
     Neutronics::
@@ -90,10 +96,12 @@ namespace neutronics_ns
     {
         delete data_;
         delete mesh_;
+        delete transport_;
     }
 
     void Neutronics::
     solve()
     {
+        transport_->solve();
     }
 }

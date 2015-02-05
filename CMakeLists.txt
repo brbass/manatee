@@ -1,9 +1,11 @@
 cmake_minimum_required (VERSION 2.8)
 
-set(CMAKE_C_COMPILER "icc")
-set(CMAKE_CXX_COMPILER "icpc")
-list( APPEND CMAKE_CXX_FLAGS "-std=c++0x ${CMAKE_CXX_FLAGS}")
-SET(CMAKE_INSTALL_PREFIX /Users/brbass/Documents/college3/research/spn_transport/manatee/bin)
+set(CMAKE_C_COMPILER "gcc")
+set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
+set(CMAKE_VERBOSE_MAKEFILE off)
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_INSTALL_PREFIX /Users/brbass/Documents/college3/research/spn_transport/manatee/bin)
 
 project(Manatee)
 
@@ -51,9 +53,6 @@ add_executable(manatee ${manatee_src} ${manatee_main})
 add_executable(tst_manatee ${manatee_src} ${manatee_test})
 
 add_test(test_manateee tst_manatee)
-
-set(CMAKE_VERBOSE_MAKEFILE on)
-set(CMAKE_BUILD_TYPE Release)
 
 target_link_libraries(manatee ${MPI_LIBRARIES})
 target_link_libraries(tst_manatee ${MPI_LIBRARIES})
