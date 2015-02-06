@@ -23,7 +23,7 @@ namespace transport_ns
     {
     public:
 
-        SPn_Transport(unsigned number_of_moments,
+        SPn_Transport(unsigned number_of_even_moments,
                       Data &data,
                       Mesh &mesh);
 
@@ -33,9 +33,10 @@ namespace transport_ns
         
     private:
         
-        unsigned number_of_moments_;
+        unsigned number_of_even_moments_;
+        unsigned number_of_edges_;
         unsigned max_num_iterations_ = 1000;
-
+        
         double tolerance = 1e-8;
         
         Data &data_;
@@ -56,8 +57,6 @@ namespace transport_ns
         Epetra_Map *map_ = 0;
         Epetra_MpiComm *comm_ = 0;
         vector<Epetra_CrsMatrix> matrix_;
-        vector<Epetra_CrsMatrix> lower_matrix_;
-        vector<Epetra_CrsMatrix> upper_matrix_;
         vector<Epetra_CrsMatrix> scattering_matrix_;
         vector<Epetra_Vector> lhs_;
         vector<Epetra_Vector> lhs_old_;
@@ -70,7 +69,7 @@ namespace transport_ns
         vector<Amesos_BaseSolver*> solver_;
         Amesos factory_;
         Teuchos::ParameterList list_;
-
+        
         int initialize_matrices();
         int initialize_lhs();
         int initialize_rhs();
@@ -80,6 +79,15 @@ namespace transport_ns
         int initialize_transport();
         int calculate_rhs();
         int check_convergence();
+        
+        inline int local_to_cell_edge(int local_index)
+        {
+            return my_global_elements_[local_index] % number_of_edges_;
+        }
+        inline int local_to_moment(int local_index)
+        {
+            return my_global_elements_[local_index] / number_of_edges_;
+        }
         
         double compute_k1(unsigned cell, unsigned group, unsigned moment);
         double compute_k2(unsigned cell, unsigned group, unsigned moment);

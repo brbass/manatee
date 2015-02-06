@@ -24,17 +24,19 @@ namespace transport_ns
     using namespace mesh_ns;
     
     SPn_Transport::
-    SPn_Transport(unsigned number_of_moments,
+    SPn_Transport(unsigned number_of_even_moments,
                   Data &data,
                   Mesh &mesh):
-        number_of_moments_(number_of_moments),
+        number_of_even_moments_(number_of_even_moments),
         data_(data),
         mesh_(mesh)
     {
         data_.check();
         mesh_.check();
+
+        number_of_edges_ = mesh_.number_of_cells() + 1;
         
-        num_global_elements_ = mesh_.number_of_cells() + 1;
+        num_global_elements_ = number_of_edges_ * number_of_even_moments_;
         
         comm_ = new Epetra_MpiComm(MPI_COMM_WORLD);
         map_ = new Epetra_Map(num_global_elements_, index_base_, *comm_);
@@ -61,26 +63,31 @@ namespace transport_ns
     int SPn_Transport::
     solve()
     {
+        unsigned iterations = 0;
+        
         for (unsigned it = 0; it < max_num_iterations_; ++ it)
         {
             calculate_rhs();
-
-            for (unsigned m = 0; m < number_of_moments_; ++m)
+            
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-                {
-                    unsigned k = g + data_.number_of_groups() * m;
-
-                    solver_[k]->Solve();
-                }
+                solver_[g]->Solve();
             }
             
             if (!check_convergence())
             {
-                cout << "iterations: " << it + 1 << endl;
+                iterations = it + 1;
+                
                 break;
             }
         }
+
+        if (iterations == 0)
+        {
+            iterations = max_num_iterations_;
+        }
+        
+        cout << "iterations: " << iterations << endl;
         
         return 0;
     }
@@ -91,196 +98,242 @@ namespace transport_ns
         int checksum = 0;
         
         Epetra_Vector temp_vector(*map_);
-        
-        for (unsigned m = 0; m < number_of_moments_; ++m)
-        {
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-            {
-                unsigned k = g + data_.number_of_groups() * m;
-                
-                double lhs_norm = 0;
-                
-                temp_vector = lhs_[k];
-                temp_vector.Scale(-1);
-                temp_vector.SumIntoGlobalValues(num_my_elements_, &lhs_old_[k][my_global_elements_[0]], &my_global_elements_[0]);
-                temp_vector.Norm1(&lhs_norm);
 
-                if (lhs_norm > tolerance)
-                {
-                    checksum += 1;
-                }
-                
-                lhs_old_[k] = lhs_[k];
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+        {
+            double lhs_norm = 0;
+            
+            temp_vector = lhs_[g];
+            temp_vector.Scale(-1);
+            temp_vector.SumIntoGlobalValues(num_my_elements_, &lhs_old_[g][my_global_elements_[0]], &my_global_elements_[0]);
+            temp_vector.Norm1(&lhs_norm);
+            
+            if (lhs_norm > tolerance)
+            {
+                checksum += 1;
             }
+            
+            lhs_old_[k] = lhs_[k];
         }
         
         return checksum;
+    }
+
+    int SPn_Transport::
+    get_row(vector<int> &indeces, vector<double> &values, unsigned local_index, unsigned group)
+    {
+        unsigned i = local_to_cell_edge(local_index);
+        unsigned m = local_to_moment(local_index);
+
+        // unsigned m0 = m;
+        // unsigned mN = m;
+        
+        // if (m > 0)
+        // {
+        //     m0 = m - 1;
+        // }
+        // if (m < number_of_even_moments_ - 1)
+        // {
+        //     mN = m + 1;
+        // }
+        
+        // unsigned i0 = i;
+        // unsigned iN = i;
+        
+        // if (i > 0)
+        // {
+        //     i0 = i - 1;
+        // }
+        // if (i < number_of_cell_edges_ - 1)
+        // {
+        //     i0 = i + 1;
+        // }
+
+        unsigned i1 = i;
+        unsigned m1 = m;
+        
+        if (m != 0)
+        {
+            if (i != 0)
+            {
+                // m-1, i-1
+                
+                i1 = i - 1;
+                m1 = m - 1;
+                
+                indeces.push_back(i1 + number_of_cell_edges_ * m1);
+                values.push_back();
+            }
+            // m-1, i
+            if (i != number_of_cell_edges_ - 1)
+            {
+                // m-1, i+1
+            }
+        }
+        
+        if (i != 0)
+        {
+            // m, i-1
+        }
+        // m, i
+        if (i != number_of_cell_edges_ - 1)
+        {
+            // m, i+1
+        }
+        
+        if (m != number_of_even_moments_ - 1)
+        {
+            if (i != 0)
+            {
+                // m+1, i-1
+            }
+            // m+1, i
+            if (i != number_of_cell_edges_ - 1)
+            {
+                // m+1, i+1
+            }
+        }
     }
     
     int SPn_Transport::
     initialize_matrices()
     {
         matrix_.clear();
-        lower_matrix_.clear();
-        upper_matrix_.clear();
+        row_map_.clear();
         
         num_my_elements_ = map_->NumMyElements();
         my_global_elements_.assign(map_->MyGlobalElements(), map_->MyGlobalElements() + num_my_elements_);
         
         unsigned num_diagonals = 3;
+        unsigned num_off_diagonals = (num_diagonals - 1) / 2;
         
-        row_map_.resize(num_diagonals, 0);
-        row_map_[0] = -1;
-        row_map_[1] = 0;
-        row_map_[2] = 1;
-        
+        for (int k1 = -number_of_edges_; k1 < number_of_edges_ + 1; k1 += number_of_edges_)
+        {
+            for (int k2 = -num_off_diagonals; k2 < num_off_diagonals; ++k2)
+            {
+                row_map_.push_back(k1 + k2);
+            }
+        }
+
         num_entries_per_row_.resize(num_my_elements_, 0);
         
-        for (unsigned i = 0; i < num_my_elements_; ++i)
+        for (unsigned e = 0; e < num_my_elements_; ++e)
         {
-            unsigned j = my_global_elements_[i];
+            unsigned i = local_to_cell_edge(e);
+            unsigned m = local_to_moment(e);
 
+            for (int k1 = -number_of_edges_; k1 < number_of_edges_ + 1; k1 += number_of_edges_)
+            {
+                for (int k2 = -num_off_diagonals; k2 < num_off_diagonals; ++k2)
+                {
+                    if (i > 0)
+                    k1 + k2;
+                }
+            }
+            
             for (unsigned k = 0; k < row_map_.size(); ++k)
             {
-                int l = j + row_map_[k];
-
-                if (l >= 0 && l < num_global_elements_)
+                int l = i + row_map_[k];
+                
+                if (l >= 0 && l < number_of_edges_)
                 {
                     num_entries_per_row_[i] += 1;
                 }
             }
         }
 
-        for (unsigned m = 0; m < number_of_moments_; ++m)
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
-            unsigned n = 2 * m;
+            Epetra_CrsMatrix matrix (Copy, *map_, &num_entries_per_row_[0], true);
             
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            for (unsigned e = 0; i < num_my_elements_; ++i)
             {
-                Epetra_CrsMatrix matrix (Copy, *map_, &num_entries_per_row_[0], true);
-                Epetra_CrsMatrix lower_matrix (Copy, *map_, &num_entries_per_row_[0], true);
-                Epetra_CrsMatrix upper_matrix (Copy, *map_, &num_entries_per_row_[0], true);
+                vector<int> indices(num_entries_per_row_[i], 0);
+                vector<double> values(num_entries_per_row_[i], 0);
+
+                if (m ==0)
+                {
+                    
+                }
+                else if (m == number_of_even_moments_ - 1)
+                {
+                }
                 
+                if (j == 0)
+                {
+                    values[0] = -compute_k1(j,g,n) * mesh_.stiffness_moment(j,1,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,1,1);
+                    values[1] = -compute_k1(j,g,n) * mesh_.stiffness_moment(j,2,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,2,1);
+                }
+                else if (j == num_global_elements_ - 1)
+                {
+                    values[0] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,1,2);
+                    values[1] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,2,2);
+                }
+                else
+                {
+                    values[0] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,1,2);
+                    values[1] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,2,2) -compute_k1(j,g,n) * mesh_.stiffness_moment(j,1,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,1,1);
+                    values[2] = -compute_k1(j,g,n) * mesh_.stiffness_moment(j,2,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,2,1);
+                }
+                matrix.InsertGlobalValues(j, num_entries_per_row_[i], &values[0], &indices[0]);
+            } // e
+                
+            matrix.FillComplete();
+            lower_matrix.FillComplete();
+            upper_matrix.FillComplete();
+                
+            matrix_.push_back(matrix);
+            lower_matrix_.push_back(lower_matrix);
+            upper_matrix_.push_back(upper_matrix);
+                
+            for (unsigned g1 = 0; g1 < data_.number_of_groups(); ++g1)
+            {
+                Epetra_CrsMatrix scattering_matrix (Copy, *map_, &num_entries_per_row_[0], true);
+                    
                 for (unsigned i = 0; i < num_my_elements_; ++i)
                 {
                     vector<int> indices(num_entries_per_row_[i], 0);
                     vector<double> values(num_entries_per_row_[i], 0);
-                    vector<double> lower_values(num_entries_per_row_[i], 0);
-                    vector<double> upper_values(num_entries_per_row_[i], 0);
-                    
+                        
                     unsigned j = my_global_elements_[i];
                     unsigned k = 0;
-                    
+                        
                     for (unsigned l = 0; l < row_map_.size(); ++l)
                     {
                         int index = j + row_map_[l];
-                        
+                            
                         if (index >= 0 && index < num_global_elements_)
                         {
                             indices[k] = index;
                             k += 1;
                         }
                     }
-
+                        
                     if (j == 0)
                     {
-                        values[0] = -compute_k1(j,g,n) * mesh_.stiffness_moment(j,1,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,1,1);
-                        values[1] = -compute_k1(j,g,n) * mesh_.stiffness_moment(j,2,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,2,1);
-
-                        lower_values[0] = compute_k2(j,g,n) * mesh_.stiffness_moment(j,1,1);
-                        lower_values[1] = compute_k2(j,g,n) * mesh_.stiffness_moment(j,2,1);
-
-                        upper_values[0] = compute_k3(j,g,n) * mesh_.stiffness_moment(j,1,1);
-                        upper_values[1] = compute_k3(j,g,n) * mesh_.stiffness_moment(j,2,1);
+                        values[0] = data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,1,1);
+                        values[1] = data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,2,1);
                     }
                     else if (j == num_global_elements_ - 1)
                     {
-                        values[0] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,1,2);
-                        values[1] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,2,2);
-
-                        lower_values[0] = compute_k2(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2);
-                        lower_values[1] = compute_k2(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2);
-
-                        upper_values[0] = compute_k3(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2);
-                        upper_values[1] = compute_k3(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2);
+                        values[0] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,1,2);
+                        values[1] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,2,2);
                     }
                     else
                     {
-                        values[0] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,1,2);
-                        values[1] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,2,2) -compute_k1(j,g,n) * mesh_.stiffness_moment(j,1,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,1,1);
-                        values[2] = -compute_k1(j,g,n) * mesh_.stiffness_moment(j,2,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,2,1);
-
-                        lower_values[0] = compute_k2(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2);
-                        lower_values[1] = compute_k2(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2) + compute_k2(j,g,n) * mesh_.stiffness_moment(j,1,1);
-                        lower_values[2] = compute_k2(j,g,n) * mesh_.stiffness_moment(j,2,1);
-
-                        upper_values[0] = compute_k2(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2);
-                        upper_values[1] = compute_k2(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2) + compute_k2(j,g,n) * mesh_.stiffness_moment(j,1,1);
-                        upper_values[2] = compute_k2(j,g,n) * mesh_.stiffness_moment(j,2,1);
-
+                        values[0] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,1,2);
+                        values[1] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,2,2) + data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,1,1);
+                        values[2] = data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,2,1);
                     }
-                    matrix.InsertGlobalValues(j, num_entries_per_row_[i], &values[0], &indices[0]);
-                    lower_matrix.InsertGlobalValues(j, num_entries_per_row_[i], &lower_values[0], &indices[0]);
-                    upper_matrix.InsertGlobalValues(j, num_entries_per_row_[i], &upper_values[0], &indices[0]);
+                        
+                    scattering_matrix.InsertGlobalValues(j, num_entries_per_row_[i], &values[0], &indices[0]);
                 } // i
                 
-                matrix.FillComplete();
-                lower_matrix.FillComplete();
-                upper_matrix.FillComplete();
+                scattering_matrix.FillComplete();
                 
-                matrix_.push_back(matrix);
-                lower_matrix_.push_back(lower_matrix);
-                upper_matrix_.push_back(upper_matrix);
-                
-                for (unsigned g1 = 0; g1 < data_.number_of_groups(); ++g1)
-                {
-                    Epetra_CrsMatrix scattering_matrix (Copy, *map_, &num_entries_per_row_[0], true);
-                    
-                    for (unsigned i = 0; i < num_my_elements_; ++i)
-                    {
-                        vector<int> indices(num_entries_per_row_[i], 0);
-                        vector<double> values(num_entries_per_row_[i], 0);
-                        
-                        unsigned j = my_global_elements_[i];
-                        unsigned k = 0;
-                        
-                        for (unsigned l = 0; l < row_map_.size(); ++l)
-                        {
-                            int index = j + row_map_[l];
-                            
-                            if (index >= 0 && index < num_global_elements_)
-                            {
-                                indices[k] = index;
-                                k += 1;
-                            }
-                        }
-                        
-                        if (j == 0)
-                        {
-                            values[0] = data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,1,1);
-                            values[1] = data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,2,1);
-                        }
-                        else if (j == num_global_elements_ - 1)
-                        {
-                            values[0] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,1,2);
-                            values[1] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,2,2);
-                        }
-                        else
-                        {
-                            values[0] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,1,2);
-                            values[1] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,2,2) + data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,1,1);
-                            values[2] = data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,2,1);
-                        }
-                        
-                        scattering_matrix.InsertGlobalValues(j, num_entries_per_row_[i], &values[0], &indices[0]);
-                    } // i
-                
-                    scattering_matrix.FillComplete();
-                
-                    scattering_matrix_.push_back(scattering_matrix);
-                } // g1
-            } // g
-        } // m
+                scattering_matrix_.push_back(scattering_matrix);
+            } // g1
+        } // g
         
         return 0;
     }
@@ -291,16 +344,13 @@ namespace transport_ns
         lhs_.clear();
         lhs_old_.clear();
         
-        for (unsigned m = 0; m < number_of_moments_; ++m)
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-            {
-                lhs_.emplace_back(*map_);
-                lhs_old_.emplace_back(*map_);
+            lhs_.emplace_back(*map_);
+            lhs_old_.emplace_back(*map_);
                 
-                lhs_.back().PutScalar(1.0);
-                lhs_old_.back().PutScalar(0.0);
-            }
+            lhs_.back().PutScalar(1.0);
+            lhs_old_.back().PutScalar(0.0);
         }
         
         return 0;
@@ -311,14 +361,11 @@ namespace transport_ns
     {
         rhs_.clear();
         
-        for (unsigned m = 0; m < number_of_moments_; ++m)
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-            {
-                rhs_.emplace_back(*map_);
+            rhs_.emplace_back(*map_);
                 
-                rhs_.back().PutScalar(1.0);
-            }
+            rhs_.back().PutScalar(1.0);
         }
 
         return 0;
@@ -353,7 +400,7 @@ namespace transport_ns
                 
                 in -= 1;
             }
-                
+            
             for (unsigned i = i0; i < in; ++i)
             {
                 unsigned j = my_global_elements_[i];
@@ -371,47 +418,24 @@ namespace transport_ns
     {
         for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
-            unsigned k = g;// + data_.number_of_groups() * 0;
-
+            // need to use "replace values"
             rhs_[k] = source_[g];
         }
         
         Epetra_Vector temp_vector(*map_);
         
-        for (unsigned m = 0; m < number_of_moments_; ++m)
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            for (unsigned g1 = 0; g1 < data_.number_of_groups(); ++g1)
             {
-                unsigned k = g + data_.number_of_groups() * m;
-                
-                for (unsigned g1 = 0; g1 < data_.number_of_groups(); ++g1)
-                {
-                    unsigned k1 = g1 + data_.number_of_groups() *  (g + data_.number_of_groups() * m);
+                unsigned k1 = g1 + data_.number_of_groups() *  (g + data_.number_of_groups() * m);
                     
-                    scattering_matrix_[k1].Multiply(false, lhs_[k], temp_vector);
+                scattering_matrix_[g].Multiply(false, lhs_[g], temp_vector);
                     
-                    rhs_[k].SumIntoGlobalValues(num_my_elements_, &temp_vector[my_global_elements_[0]], &my_global_elements_[0]);
-                }
-                
-                if (m > 0)
-                {
-                    unsigned k1 = g + data_.number_of_groups() * (m - 1);
-                    
-                    lower_matrix_[k1].Multiply(false, lhs_[k1], temp_vector);
-
-                    rhs_[k].SumIntoGlobalValues(num_my_elements_, &temp_vector[my_global_elements_[0]], &my_global_elements_[0]);
-                }
-                if (m + 2 < number_of_moments_)
-                {
-                    unsigned k1 = g + data_.number_of_groups() * (m + 1);
-                    
-                    upper_matrix_[k1].Multiply(false, lhs_[k1], temp_vector);
-                    
-                    rhs_[k].SumIntoGlobalValues(num_my_elements_, &temp_vector[my_global_elements_[0]], &my_global_elements_[0]);
-                }
-                
-                problem_[k].SetRHS(&rhs_[k]);
+                rhs_[g].SumIntoGlobalValues(num_my_elements_, &temp_vector[my_global_elements_[0]], &my_global_elements_[0]);
             }
+                
+            problem_[g].SetRHS(&rhs_[g]);
         }
 
         return 0;
@@ -422,14 +446,9 @@ namespace transport_ns
     {
         problem_.clear();
         
-        for (unsigned m = 0; m < number_of_moments_; ++m)
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-            {
-                unsigned k = g + data_.number_of_groups() * m;
-
-                problem_.emplace_back(&matrix_[k], &lhs_[k], &rhs_[k]);
-            }
+            problem_.emplace_back(&matrix_[g], &lhs_[g], &rhs_[g]);
         }
 
         return 0;
@@ -440,25 +459,20 @@ namespace transport_ns
     {
         solver_.clear();
         
-        for (unsigned m = 0; m < number_of_moments_; ++m)
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            solver_.push_back(factory_.Create(solver_type_, problem_[g]));
+                
+            if (solver_.back() == NULL)
             {
-                unsigned k = g + data_.number_of_groups() * m;
-
-                solver_.push_back(factory_.Create(solver_type_, problem_[k]));
-                
-                if (solver_.back() == NULL)
-                {
-                    cerr << "Specified solver \"" << solver_type_ << "\" is not available." << endl;
-                }
-        
-                solver_.back()->SetParameters(list_);
-                
-                solver_.back()->SymbolicFactorization();
-                
-                solver_.back()->NumericFactorization();
+                cerr << "Specified solver \"" << solver_type_ << "\" is not available." << endl;
             }
+        
+            solver_.back()->SetParameters(list_);
+                
+            solver_.back()->SymbolicFactorization();
+                
+            solver_.back()->NumericFactorization();
         }
 
         return 0;
