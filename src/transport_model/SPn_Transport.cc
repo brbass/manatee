@@ -9,7 +9,9 @@
 
 #include <Epetra_MpiComm.h>
 #include <Epetra_Map.h>
+#include <Epetra_SerialDenseMatrix.h>
 #include <Epetra_CrsMatrix.h>
+#include <Epetra_FECrsMatrix.h>
 #include <Epetra_Vector.h>
 #include <Epetra_LinearProblem.h>
 #include <Amesos.h>
@@ -113,88 +115,12 @@ namespace transport_ns
                 checksum += 1;
             }
             
-            lhs_old_[k] = lhs_[k];
+            lhs_old_[g] = lhs_[g];
         }
         
         return checksum;
     }
 
-    int SPn_Transport::
-    get_row(vector<int> &indeces, vector<double> &values, unsigned local_index, unsigned group)
-    {
-        unsigned i = local_to_cell_edge(local_index);
-        unsigned m = local_to_moment(local_index);
-
-        // unsigned m0 = m;
-        // unsigned mN = m;
-        
-        // if (m > 0)
-        // {
-        //     m0 = m - 1;
-        // }
-        // if (m < number_of_even_moments_ - 1)
-        // {
-        //     mN = m + 1;
-        // }
-        
-        // unsigned i0 = i;
-        // unsigned iN = i;
-        
-        // if (i > 0)
-        // {
-        //     i0 = i - 1;
-        // }
-        // if (i < number_of_cell_edges_ - 1)
-        // {
-        //     i0 = i + 1;
-        // }
-
-        unsigned i1 = i;
-        unsigned m1 = m;
-        
-        if (m != 0)
-        {
-            if (i != 0)
-            {
-                // m-1, i-1
-                
-                i1 = i - 1;
-                m1 = m - 1;
-                
-                indeces.push_back(i1 + number_of_cell_edges_ * m1);
-                values.push_back();
-            }
-            // m-1, i
-            if (i != number_of_cell_edges_ - 1)
-            {
-                // m-1, i+1
-            }
-        }
-        
-        if (i != 0)
-        {
-            // m, i-1
-        }
-        // m, i
-        if (i != number_of_cell_edges_ - 1)
-        {
-            // m, i+1
-        }
-        
-        if (m != number_of_even_moments_ - 1)
-        {
-            if (i != 0)
-            {
-                // m+1, i-1
-            }
-            // m+1, i
-            if (i != number_of_cell_edges_ - 1)
-            {
-                // m+1, i+1
-            }
-        }
-    }
-    
     int SPn_Transport::
     initialize_matrices()
     {
@@ -203,137 +129,121 @@ namespace transport_ns
         
         num_my_elements_ = map_->NumMyElements();
         my_global_elements_.assign(map_->MyGlobalElements(), map_->MyGlobalElements() + num_my_elements_);
-        
-        unsigned num_diagonals = 3;
-        unsigned num_off_diagonals = (num_diagonals - 1) / 2;
-        
-        for (int k1 = -number_of_edges_; k1 < number_of_edges_ + 1; k1 += number_of_edges_)
-        {
-            for (int k2 = -num_off_diagonals; k2 < num_off_diagonals; ++k2)
-            {
-                row_map_.push_back(k1 + k2);
-            }
-        }
 
         num_entries_per_row_.resize(num_my_elements_, 0);
         
-        for (unsigned e = 0; e < num_my_elements_; ++e)
+        for (unsigned i = 0; i < number_of_edges_; ++i)
         {
-            unsigned i = local_to_cell_edge(e);
-            unsigned m = local_to_moment(e);
-
-            for (int k1 = -number_of_edges_; k1 < number_of_edges_ + 1; k1 += number_of_edges_)
-            {
-                for (int k2 = -num_off_diagonals; k2 < num_off_diagonals; ++k2)
-                {
-                    if (i > 0)
-                    k1 + k2;
-                }
-            }
+            num_entries_per_row_[i + 0] = 6;
             
-            for (unsigned k = 0; k < row_map_.size(); ++k)
+            for (unsigned m = 1; m < number_of_even_moments_ - 1; ++m)
             {
-                int l = i + row_map_[k];
-                
-                if (l >= 0 && l < number_of_edges_)
-                {
-                    num_entries_per_row_[i] += 1;
-                }
+                num_entries_per_row_[i + number_of_edges_ * m] = 9;
             }
+
+            num_entries_per_row_[i + number_of_edges_ * (number_of_even_moments_ - 1)] = 6;
         }
 
         for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
-            Epetra_CrsMatrix matrix (Copy, *map_, &num_entries_per_row_[0], true);
-            
-            for (unsigned e = 0; i < num_my_elements_; ++i)
-            {
-                vector<int> indices(num_entries_per_row_[i], 0);
-                vector<double> values(num_entries_per_row_[i], 0);
-
-                if (m ==0)
-                {
+            Epetra_FECrsMatrix matrix (Copy, *map_, &num_entries_per_row_[0], true);
+            Epetra_SerialDenseMatrix fill_matrix (2, 2);
+            Epetra_IntSerialDenseVector fill_vector (2);
                     
-                }
-                else if (m == number_of_even_moments_ - 1)
-                {
-                }
+            for (unsigned m = 0; m < number_of_even_moments_; ++m)
+            {
+                unsigned n = 2 * m;
                 
-                if (j == 0)
+                for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
                 {
-                    values[0] = -compute_k1(j,g,n) * mesh_.stiffness_moment(j,1,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,1,1);
-                    values[1] = -compute_k1(j,g,n) * mesh_.stiffness_moment(j,2,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,2,1);
+                    double l = compute_l(i, g, n);
+                    
+                    for (unsigned o1 = 0; o1 < 2; ++o1)
+                    {
+                        for (unsigned o2 = 0; o2< 2; ++o2)
+                        {
+                            fill_matrix(o1, o2) = data_.sigma_t(i, g) * mesh_.stiffness(i, o1 + 1, o2 + 1) - l * mesh_.stiffness_moment(i, o1 + 1, o2 + 1);
+                        }
+                        
+                        fill_vector(o1) = i + o1 + number_of_edges_ * m;
+                    }
+                    
+                    matrix.InsertGlobalValues(fill_vector, fill_matrix);
+                    
+                    if (m > 0)
+                    {
+                        double ll = compute_ll(i, g, n);
+                        
+                        for (unsigned o1 = 0; o1 < 2; ++o1)
+                        {
+                            for (unsigned o2 = 0; o2< 2; ++o2)
+                            {
+                                fill_matrix(o1, o2) = -ll * mesh_.stiffness_moment(i, o1 + 1, o2 + 1);
+                            }
+                            
+                            fill_vector(o1) = i + o1 + number_of_edges_ * (m - 1);
+                        }
+
+                        matrix.InsertGlobalValues(fill_vector, fill_matrix);
+                    }
+                    
+                    if (m < number_of_even_moments_ - 1)
+                    {
+                        double lu = compute_lu(i, g, n);
+                        
+                        for (unsigned o1 = 0; o1 < 2; ++o1)
+                        {
+                            for (unsigned o2 = 0; o2< 2; ++o2)
+                            {
+                                fill_matrix(o1, o2) = -lu * mesh_.stiffness_moment(i, o1 + 1, o2 + 1);
+                            }
+
+                            fill_vector(o1) = i + o1 + number_of_edges_ * (m + 1);
+                        }
+
+                        matrix.InsertGlobalValues(fill_vector, fill_matrix);
+                    }
                 }
-                else if (j == num_global_elements_ - 1)
-                {
-                    values[0] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,1,2);
-                    values[1] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,2,2);
-                }
-                else
-                {
-                    values[0] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,1,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,1,2);
-                    values[1] = -compute_k1(j-1,g,n) * mesh_.stiffness_moment(j-1,2,2) + data_.sigma_t(j-1, g) * mesh_.stiffness(j-1,2,2) -compute_k1(j,g,n) * mesh_.stiffness_moment(j,1,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,1,1);
-                    values[2] = -compute_k1(j,g,n) * mesh_.stiffness_moment(j,2,1) + data_.sigma_t(j, g) * mesh_.stiffness(j,2,1);
-                }
-                matrix.InsertGlobalValues(j, num_entries_per_row_[i], &values[0], &indices[0]);
-            } // e
-                
-            matrix.FillComplete();
-            lower_matrix.FillComplete();
-            upper_matrix.FillComplete();
-                
+            }
+            
+            matrix.GlobalAssemble();
+            
             matrix_.push_back(matrix);
-            lower_matrix_.push_back(lower_matrix);
-            upper_matrix_.push_back(upper_matrix);
-                
+        }
+        
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+        {
             for (unsigned g1 = 0; g1 < data_.number_of_groups(); ++g1)
             {
-                Epetra_CrsMatrix scattering_matrix (Copy, *map_, &num_entries_per_row_[0], true);
-                    
-                for (unsigned i = 0; i < num_my_elements_; ++i)
+                Epetra_FECrsMatrix matrix (Copy, *map_, &num_entries_per_row_[0], true);
+                Epetra_SerialDenseMatrix fill_matrix (2, 2);
+                Epetra_IntSerialDenseVector fill_vector (2);
+                
+                for (unsigned m = 0; m < number_of_even_moments_; ++m)
                 {
-                    vector<int> indices(num_entries_per_row_[i], 0);
-                    vector<double> values(num_entries_per_row_[i], 0);
-                        
-                    unsigned j = my_global_elements_[i];
-                    unsigned k = 0;
-                        
-                    for (unsigned l = 0; l < row_map_.size(); ++l)
+                    unsigned n = 2 * m;
+                
+                    for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
                     {
-                        int index = j + row_map_[l];
-                            
-                        if (index >= 0 && index < num_global_elements_)
+                        for (unsigned o1 = 0; o1 < 2; ++o1)
                         {
-                            indices[k] = index;
-                            k += 1;
+                            for (unsigned o2 = 0; o2< 2; ++o2)
+                            {
+                                fill_matrix(o1, o2) = data_.sigma_s(i, g, g1, n) * mesh_.stiffness(i, o1 + 1, o2 + 1);
+                            }
+                        
+                            fill_vector(o1) = i + o1 + number_of_edges_ * m;
                         }
+                    
+                        matrix.InsertGlobalValues(fill_vector, fill_matrix);
                     }
-                        
-                    if (j == 0)
-                    {
-                        values[0] = data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,1,1);
-                        values[1] = data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,2,1);
-                    }
-                    else if (j == num_global_elements_ - 1)
-                    {
-                        values[0] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,1,2);
-                        values[1] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,2,2);
-                    }
-                    else
-                    {
-                        values[0] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,1,2);
-                        values[1] = data_.sigma_s(j-1, g1, g, m) * mesh_.stiffness(j-1,2,2) + data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,1,1);
-                        values[2] = data_.sigma_s(j, g1, g, m) * mesh_.stiffness(j,2,1);
-                    }
-                        
-                    scattering_matrix.InsertGlobalValues(j, num_entries_per_row_[i], &values[0], &indices[0]);
-                } // i
+                }
                 
-                scattering_matrix.FillComplete();
+                matrix.GlobalAssemble();
                 
-                scattering_matrix_.push_back(scattering_matrix);
-            } // g1
-        } // g
+                scattering_matrix_.push_back(matrix);
+            }
+        }
         
         return 0;
     }
@@ -380,35 +290,15 @@ namespace transport_ns
         {
             source_.emplace_back(*map_);
             source_[g].PutScalar(0.0);
-            
-            unsigned j0 = my_global_elements_.front();
-            unsigned i0 = 0;
-            
-            if (j0 == 0)
+
+            for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
             {
-                source_[g][j0] = (mesh_.stiffness(j0,1,1) + mesh_.stiffness(j0,2,1)) * data_.internal_source(j0, g);
-                
-                i0 = 1;
+                source_[g][i/* +0 */] += data_.internal_source(i, g);
+                source_[g][i+1/* +0 */] += data_.internal_source(i, g);
             }
-            
-            unsigned jn = my_global_elements_.back();
-            unsigned in = num_my_elements_;
-                
-            if (jn == num_global_elements_ - 1)
-            {
-                source_[g][jn] = (mesh_.stiffness(jn-1,1,2) + mesh_.stiffness(jn-1,2,2)) * data_.internal_source(jn-1, g);
-                
-                in -= 1;
-            }
-            
-            for (unsigned i = i0; i < in; ++i)
-            {
-                unsigned j = my_global_elements_[i];
-                
-                source_[g][j] = (mesh_.stiffness(j-1,1,2) + mesh_.stiffness(j-1,2,2)) * data_.internal_source(j-1, g) + (mesh_.stiffness(j,1,1) + mesh_.stiffness(j,2,1)) * data_.internal_source(j, g);
-            }
+
         }
-        
+
         return 0;
     }
 
@@ -418,8 +308,7 @@ namespace transport_ns
     {
         for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
-            // need to use "replace values"
-            rhs_[k] = source_[g];
+            rhs_[g] = source_[g];
         }
         
         Epetra_Vector temp_vector(*map_);
@@ -428,10 +317,10 @@ namespace transport_ns
         {
             for (unsigned g1 = 0; g1 < data_.number_of_groups(); ++g1)
             {
-                unsigned k1 = g1 + data_.number_of_groups() *  (g + data_.number_of_groups() * m);
+                unsigned k = g1 + data_.number_of_groups() *  g;
                     
-                scattering_matrix_[g].Multiply(false, lhs_[g], temp_vector);
-                    
+                scattering_matrix_[k].Multiply(false, lhs_[g], temp_vector);
+                
                 rhs_[g].SumIntoGlobalValues(num_my_elements_, &temp_vector[my_global_elements_[0]], &my_global_elements_[0]);
             }
                 
@@ -477,9 +366,10 @@ namespace transport_ns
 
         return 0;
     }
-    
+
+    // collision and streaming
     double SPn_Transport::
-    compute_k1(unsigned cell, unsigned group, unsigned moment)
+    compute_l(unsigned cell, unsigned group, unsigned moment)
     {
         if (moment >= 2)
         {
@@ -492,9 +382,10 @@ namespace transport_ns
             return pow(2 / mesh_.cell_length(cell), 2) * data_.d(cell, group, moment);
         }            
     }
-    
+
+    // collision and streaming, n-2
     double SPn_Transport::
-    compute_k2(unsigned cell, unsigned group, unsigned moment)
+    compute_ll(unsigned cell, unsigned group, unsigned moment)
     {
         if (moment >= 2)
         {
@@ -508,8 +399,9 @@ namespace transport_ns
         }            
     }
 
+    // collision and streaming, n+2
     double SPn_Transport::
-    compute_k3(unsigned cell, unsigned group, unsigned moment)
+    compute_lu(unsigned cell, unsigned group, unsigned moment)
     {
         unsigned k = (moment + 2) / (moment + 1);
 

@@ -65,6 +65,11 @@ namespace neutronics_ns
         ~Neutronics();
 
         void solve();
+
+        void print_scalar_flux()
+        {
+            transport_->print_scalar_flux();
+        }
     };
 }
 

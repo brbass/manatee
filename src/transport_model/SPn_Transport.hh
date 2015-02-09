@@ -1,11 +1,13 @@
 #ifndef SPn_Transport_hh
 #define SPn_Transport_hh
 
+#include <iostream>
 #include <vector>
 
 #include <Epetra_MpiComm.h>
 #include <Epetra_Map.h>
 #include <Epetra_CrsMatrix.h>
+#include <Epetra_FECrsMatrix.h>
 #include <Epetra_Vector.h>
 #include <Epetra_LinearProblem.h>
 #include <Amesos.h>
@@ -21,16 +23,6 @@ namespace transport_ns
     
     class SPn_Transport
     {
-    public:
-
-        SPn_Transport(unsigned number_of_even_moments,
-                      Data &data,
-                      Mesh &mesh);
-
-        ~SPn_Transport();
-        
-        int solve();
-        
     private:
         
         unsigned number_of_even_moments_;
@@ -56,7 +48,7 @@ namespace transport_ns
         
         Epetra_Map *map_ = 0;
         Epetra_MpiComm *comm_ = 0;
-        vector<Epetra_CrsMatrix> matrix_;
+        vector<Epetra_FECrsMatrix> matrix_;
         vector<Epetra_CrsMatrix> scattering_matrix_;
         vector<Epetra_Vector> lhs_;
         vector<Epetra_Vector> lhs_old_;
@@ -89,9 +81,44 @@ namespace transport_ns
             return my_global_elements_[local_index] / number_of_edges_;
         }
         
-        double compute_k1(unsigned cell, unsigned group, unsigned moment);
-        double compute_k2(unsigned cell, unsigned group, unsigned moment);
-        double compute_k3(unsigned cell, unsigned group, unsigned moment);
+        double compute_l(unsigned cell, unsigned group, unsigned moment);
+        double compute_ll(unsigned cell, unsigned group, unsigned moment);
+        double compute_lu(unsigned cell, unsigned group, unsigned moment);
+
+    public:
+
+        SPn_Transport(unsigned number_of_even_moments,
+                      Data &data,
+                      Mesh &mesh);
+
+        ~SPn_Transport();
+        
+        int solve();
+
+        void print_scalar_flux()
+        {
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                std::cout << "Group " << g << " scalar flux" << std::endl;
+                std::cout << lhs_[g] << std::endl;
+
+                // std::cout << "Group " << g << " lhs" << std::endl;
+                // std::cout << rhs_[g] << std::endl;
+
+                // std::cout << "Group " << g << " matrix" << std::endl;
+                // std::cout << rhs_[g] << std::endl;
+
+                // std::cout << "Group " << g << " source" << std::endl;
+                // std::cout << source_[g] << std::endl;
+
+                // for (unsigned g1 = 0; g1 < data_.number_of_groups(); ++g1)
+                // {
+                //     std::cout << "From " << g << " to " << g1 << " group scattering" << std::endl;
+                //     std::cout << scattering_matrix_[g + data_.number_of_groups() * g1] << std::endl;
+                // }
+            }
+        }
+        
     };
 }
 #endif
