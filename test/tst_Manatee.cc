@@ -13,9 +13,9 @@ int test_neutronics()
     unsigned checksum = 0;
     
     unsigned number_of_dimensions = 1;
-    unsigned number_of_cells = 10000;
-    unsigned number_of_groups = 50;
-    unsigned number_of_scattering_moments = 7;
+    unsigned number_of_cells = 10;
+    unsigned number_of_groups = 2;
+    unsigned number_of_scattering_moments = 5;
     
     vector<double> side_length(1, 2.0);
     vector<unsigned> number_of_cells_per_dimension(1, number_of_cells);
@@ -36,14 +36,16 @@ int test_neutronics()
                 for (unsigned m = 0; m < number_of_scattering_moments; ++m)
                 {
                     unsigned k = g1 + number_of_groups * (g2 + number_of_groups * (i + number_of_cells * m));
-                    
-                    sigma_s[k] = 0.2 * (g1 + 1) * (2 * g1 + 1) / number_of_groups / number_of_groups / (10 * m + 1) / number_of_groups;
-                    sigma_s[k] *= 1.0 * i / number_of_cells;
+                    if (m < 3)
+                    {
+                        sigma_s[k] = 0.2 * (g1 + 1) * (2 * g1 + 1) / number_of_groups / number_of_groups / (m + 1) / number_of_groups;
+                        sigma_s[k] *= 1.0 * i / number_of_cells;
+                    }
                 }
             }
         }
     }
-
+    
     for (unsigned i = 0; i < number_of_cells; ++i)
     {
         for (unsigned g = 0; g < number_of_groups; ++g)
@@ -69,8 +71,8 @@ int test_neutronics()
                           boundary_conditions);
     
     neutronics.solve();
-
-    // neutronics.print_scalar_flux();
+    
+    neutronics.print_scalar_flux();
     
     return checksum;
 }
@@ -78,11 +80,11 @@ int test_neutronics()
 int main(int argc, char *argv[])
 {
     MPI_Init(&argc, &argv);
-
+    
     unsigned checksum = 0;
     
     checksum += test_neutronics();
-
+    
     MPI_Finalize();
     
     return checksum;
