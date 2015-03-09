@@ -6,6 +6,7 @@
 
 #include "Data.hh"
 #include "Mesh.hh"
+#include "SP1_Transport.hh"
 #include "SPn_Transport.hh"
 
 namespace neutronics_ns
@@ -23,7 +24,7 @@ namespace neutronics_ns
 
         Data *data_;
         Mesh *mesh_;
-        SPn_Transport *transport_;
+        SP1_Transport *transport_;
         
         unsigned number_of_dimensions_;
         unsigned number_of_cells_;

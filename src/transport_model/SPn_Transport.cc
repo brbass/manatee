@@ -2,19 +2,21 @@
 
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include <mpi.h>
 
+#include <Amesos.h>
+#include <Epetra_CrsMatrix.h>
+#include <Epetra_FECrsMatrix.h>
+#include <Epetra_LinearProblem.h>
 #include <Epetra_MpiComm.h>
 #include <Epetra_Map.h>
 #include <Epetra_SerialDenseMatrix.h>
-#include <Epetra_CrsMatrix.h>
-#include <Epetra_FECrsMatrix.h>
+#include <Epetra_SerialDenseSolver.h>
 #include <Epetra_Vector.h>
-#include <Epetra_LinearProblem.h>
-#include <Amesos.h>
 
 #include "Data.hh"
 #include "Mesh.hh"
@@ -38,15 +40,15 @@ namespace transport_ns
 
         number_of_edges_ = mesh_.number_of_cells() + 1;
         
-        num_global_elements_ = number_of_edges_ * number_of_even_moments_;
-        
-        comm_ = new Epetra_MpiComm(MPI_COMM_WORLD);
-        map_ = new Epetra_Map(num_global_elements_, index_base_, *comm_);
+        num_global_elements_ = number_of_edges_ * number_of_even_moments_ * data_.number_of_groups();
 
-        initialize_matrices();
+        comm_ = unique_ptr<Epetra_MpiComm> (new Epetra_MpiComm(MPI_COMM_WORLD));
+        map_ = unique_ptr<Epetra_Map> (new Epetra_Map(num_global_elements_, index_base_, *comm_));
+
+        initialize_d();
+        initialize_matrix();
         initialize_lhs();
         initialize_rhs();
-        initialize_source();
         initialize_problem();
         initialize_solver();
     }
@@ -54,196 +56,155 @@ namespace transport_ns
     SPn_Transport::
     ~SPn_Transport()
     {
-        delete map_;
-        delete comm_;
-        for (unsigned i = 0; i < solver_.size(); ++i)
-        {
-            delete solver_[i];
-        }
     }
     
     int SPn_Transport::
     solve()
     {
-        unsigned iterations = 0;
+        solver_->SymbolicFactorization();
         
-        for (unsigned it = 0; it < max_num_iterations_; ++ it)
-        {
-            calculate_rhs();
-            
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-            {
-                solver_[g]->Solve();
-            }
-            
-            if (!check_convergence())
-            {
-                iterations = it + 1;
-                
-                break;
-            }
-        }
-
-        if (iterations == 0)
-        {
-            iterations = max_num_iterations_;
-        }
+        solver_->NumericFactorization();
         
-        cout << "iterations: " << iterations << endl;
+        solver_->Solve();
         
         return 0;
     }
 
     int SPn_Transport::
-    check_convergence()
+    initialize_matrix()
     {
-        int checksum = 0;
-        
-        Epetra_Vector temp_vector(*map_);
-
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-        {
-            double lhs_norm = 0;
-            
-            temp_vector = lhs_[g];
-            temp_vector.Scale(-1);
-            temp_vector.SumIntoGlobalValues(num_my_elements_, &lhs_old_[g][my_global_elements_[0]], &my_global_elements_[0]);
-            temp_vector.Norm1(&lhs_norm);
-            
-            if (lhs_norm > tolerance)
-            {
-                checksum += 1;
-            }
-            
-            lhs_old_[g] = lhs_[g];
-        }
-        
-        return checksum;
-    }
-
-    int SPn_Transport::
-    initialize_matrices()
-    {
-        matrix_.clear();
-        row_map_.clear();
-        
         num_my_elements_ = map_->NumMyElements();
         my_global_elements_.assign(map_->MyGlobalElements(), map_->MyGlobalElements() + num_my_elements_);
-
+        
         num_entries_per_row_.resize(num_my_elements_, 0);
         
         for (unsigned i = 0; i < number_of_edges_; ++i)
         {
-            num_entries_per_row_[i + 0] = 6;
+            num_entries_per_row_[i + 0] = 6 * data_.number_of_groups();
             
             for (unsigned m = 1; m < number_of_even_moments_ - 1; ++m)
             {
-                num_entries_per_row_[i + number_of_edges_ * m] = 9;
+                num_entries_per_row_[i + number_of_edges_ * m] = 9 * data_.number_of_groups();
             }
 
-            num_entries_per_row_[i + number_of_edges_ * (number_of_even_moments_ - 1)] = 6;
-        }
-
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-        {
-            Epetra_FECrsMatrix matrix (Copy, *map_, &num_entries_per_row_[0], true);
-            Epetra_SerialDenseMatrix fill_matrix (2, 2);
-            Epetra_IntSerialDenseVector fill_vector (2);
-                    
-            for (unsigned m = 0; m < number_of_even_moments_; ++m)
-            {
-                unsigned n = 2 * m;
-                
-                for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
-                {
-                    double l = compute_l(i, g, n);
-                    
-                    for (unsigned o1 = 0; o1 < 2; ++o1)
-                    {
-                        for (unsigned o2 = 0; o2< 2; ++o2)
-                        {
-                            fill_matrix(o1, o2) = data_.sigma_t(i, g) * mesh_.stiffness(i, o1 + 1, o2 + 1) - l * mesh_.stiffness_moment(i, o1 + 1, o2 + 1);
-                        }
-                        
-                        fill_vector(o1) = i + o1 + number_of_edges_ * m;
-                    }
-                    
-                    matrix.InsertGlobalValues(fill_vector, fill_matrix);
-                    
-                    if (m > 0)
-                    {
-                        double ll = compute_ll(i, g, n);
-                        
-                        for (unsigned o1 = 0; o1 < 2; ++o1)
-                        {
-                            for (unsigned o2 = 0; o2< 2; ++o2)
-                            {
-                                fill_matrix(o1, o2) = -ll * mesh_.stiffness_moment(i, o1 + 1, o2 + 1);
-                            }
-                            
-                            fill_vector(o1) = i + o1 + number_of_edges_ * (m - 1);
-                        }
-
-                        matrix.InsertGlobalValues(fill_vector, fill_matrix);
-                    }
-                    
-                    if (m < number_of_even_moments_ - 1)
-                    {
-                        double lu = compute_lu(i, g, n);
-                        
-                        for (unsigned o1 = 0; o1 < 2; ++o1)
-                        {
-                            for (unsigned o2 = 0; o2< 2; ++o2)
-                            {
-                                fill_matrix(o1, o2) = -lu * mesh_.stiffness_moment(i, o1 + 1, o2 + 1);
-                            }
-
-                            fill_vector(o1) = i + o1 + number_of_edges_ * (m + 1);
-                        }
-
-                        matrix.InsertGlobalValues(fill_vector, fill_matrix);
-                    }
-                }
-            }
-            
-            matrix.GlobalAssemble();
-            
-            matrix_.push_back(matrix);
+            num_entries_per_row_[i + number_of_edges_ * (number_of_even_moments_ - 1)] = 6 * data_.number_of_groups();
         }
         
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+        matrix_ = unique_ptr<Epetra_FECrsMatrix> (new Epetra_FECrsMatrix (Copy, *map_, &num_entries_per_row_[0], true));
+
+        
+        for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
-            for (unsigned g1 = 0; g1 < data_.number_of_groups(); ++g1)
+            unsigned dims = mesh_.number_of_nodes() * data_.number_of_groups() * number_of_even_moments_;
+            
+            Epetra_SerialDenseMatrix fill_matrix (dims, dims);
+            Epetra_IntSerialDenseVector fill_vector (dims);
+        
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                Epetra_FECrsMatrix matrix (Copy, *map_, &num_entries_per_row_[0], true);
-                Epetra_SerialDenseMatrix fill_matrix (2, 2);
-                Epetra_IntSerialDenseVector fill_vector (2);
-                
                 for (unsigned m = 0; m < number_of_even_moments_; ++m)
                 {
-                    unsigned n = 2 * m;
-                
-                    for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+                    for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
                     {
-                        for (unsigned o1 = 0; o1 < 2; ++o1)
+                        unsigned k1 = o1 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * m);
+                            
+                        for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
                         {
-                            for (unsigned o2 = 0; o2< 2; ++o2)
-                            {
-                                fill_matrix(o1, o2) = data_.sigma_s(i, g, g1, n) * mesh_.stiffness(i, o1 + 1, o2 + 1);
-                            }
-                        
-                            fill_vector(o1) = i + o1 + number_of_edges_ * m;
+                            unsigned k2 = o2 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * m);
+                                
+                            fill_matrix(k1, k2) += data_.sigma_t(i, g) * mesh_.stiffness(i, o1 + 1, o2 + 1); // 1
                         }
-                    
-                        matrix.InsertGlobalValues(fill_vector, fill_matrix);
                     }
                 }
-                
-                matrix.GlobalAssemble();
-                
-                scattering_matrix_.push_back(matrix);
             }
+            
+            for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+            {
+                for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                {
+                    for (unsigned m = 0; m < number_of_even_moments_; ++m)
+                    {
+                        unsigned n = 2 * m;
+                        
+                        double l = compute_l(i, gf, gt, n);
+                        
+                        for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
+                        {
+                            unsigned k1 = o1 + mesh_.number_of_nodes() * (gt + data_.number_of_groups() * m);
+                            
+                            for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
+                            {
+                                unsigned k2 = o2 + mesh_.number_of_nodes() * (gf + data_.number_of_groups() * m);
+                                
+                                fill_matrix(k1, k2) -= l * mesh_.stiffness_moment(i, o1 + 1, o2 + 1); // 2
+                            }
+                            
+                            fill_vector(k1) = i + o1 + number_of_edges_ * (gt + data_.number_of_groups() * m);
+                        }
+                        
+                        if (m > 0)
+                        {
+                            double ll = compute_ll(i, gf, gt, n);
+                            
+                            for (unsigned o1 = 0; o1 < 2; ++o1)
+                            {
+                                unsigned k1 = o1 + mesh_.number_of_nodes() * (gt + data_.number_of_groups() * (m - 1));
+                                
+                                for (unsigned o2 = 0; o2< 2; ++o2)
+                                {
+                                    unsigned k2 = o2 + mesh_.number_of_nodes() * (gf + data_.number_of_groups() * m);
+                                    fill_matrix(k1, k2) -= ll * mesh_.stiffness_moment(i, o1 + 1, o2 + 1); // 4
+                                }
+                            }
+                        }
+                    
+                        if (m < number_of_even_moments_ - 1)
+                        {
+                            double lu = compute_lu(i, gf, gt, n);
+                        
+                            for (unsigned o1 = 0; o1 < 2; ++o1)
+                            {
+                                unsigned k1 = o1 + mesh_.number_of_nodes() * (gt + data_.number_of_groups() * (m + 1));
+
+                                for (unsigned o2 = 0; o2< 2; ++o2)
+                                {
+                                    unsigned k2 = o2 + mesh_.number_of_nodes() * (gf + data_.number_of_groups() * m);
+                                    
+                                    fill_matrix(k1, k2) -= lu * mesh_.stiffness_moment(i, o1 + 1, o2 + 1); // 8
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+            {
+                for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                {
+                    for (unsigned m = 0; m < number_of_even_moments_; ++m)
+                    {
+                        unsigned n = 2 * m;
+                        
+                        for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
+                        {
+                            unsigned k1 = o1 + mesh_.number_of_nodes() * (gt + data_.number_of_groups() * m);
+                            
+                            for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
+                            {
+                                unsigned k2 = o2 + mesh_.number_of_nodes() * (gf + data_.number_of_groups() * m);
+                                
+                                fill_matrix(k1, k2) -= data_.sigma_s(i, gf, gt, n) * mesh_.stiffness(i, o1 + 1, o2 + 1); // 16
+                            }
+                        }
+                    }
+                }
+            }
+            
+            matrix_->InsertGlobalValues(fill_vector, fill_matrix);
         }
+        
+        matrix_->GlobalAssemble();
         
         return 0;
     }
@@ -251,17 +212,8 @@ namespace transport_ns
     int SPn_Transport::
     initialize_lhs()
     {
-        lhs_.clear();
-        lhs_old_.clear();
-        
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-        {
-            lhs_.emplace_back(*map_);
-            lhs_old_.emplace_back(*map_);
-                
-            lhs_.back().PutScalar(1.0);
-            lhs_old_.back().PutScalar(0.0);
-        }
+        lhs_ = unique_ptr<Epetra_Vector> (new Epetra_Vector(*map_));
+        lhs_->PutScalar(1.0);
         
         return 0;
     }
@@ -269,129 +221,73 @@ namespace transport_ns
     int SPn_Transport::
     initialize_rhs()
     {
-        rhs_.clear();
+        rhs_ = unique_ptr<Epetra_Vector> (new Epetra_Vector(*map_));
+        rhs_->PutScalar(0.0);
         
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+        for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
-            rhs_.emplace_back(*map_);
-                
-            rhs_.back().PutScalar(1.0);
-        }
-
-        return 0;
-    }
-
-    int SPn_Transport::
-    initialize_source()
-    {
-        source_.clear();
-        
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-        {
-            source_.emplace_back(*map_);
-            source_[g].PutScalar(0.0);
-
-            for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                source_[g][i/* +0 */] += data_.internal_source(i, g);
-                source_[g][i+1/* +0 */] += data_.internal_source(i, g);
-            }
-
-        }
-
-        return 0;
-    }
-
-    
-    int SPn_Transport::
-    calculate_rhs()
-    {
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-        {
-            rhs_[g] = source_[g];
-        }
-        
-        Epetra_Vector temp_vector(*map_);
-        
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-        {
-            for (unsigned g1 = 0; g1 < data_.number_of_groups(); ++g1)
-            {
-                unsigned k = g1 + data_.number_of_groups() *  g;
+                for (unsigned o = 0; o < mesh_.number_of_nodes(); ++o)
+                {
+                    unsigned k = o + i + number_of_edges_ * g;
                     
-                scattering_matrix_[k].Multiply(false, lhs_[g], temp_vector);
-                
-                rhs_[g].SumIntoGlobalValues(num_my_elements_, &temp_vector[my_global_elements_[0]], &my_global_elements_[0]);
+                    (*rhs_)[k] += data_.internal_source(i, g);
+                }
             }
-                
-            problem_[g].SetRHS(&rhs_[g]);
         }
-
+        
         return 0;
     }
 
     int SPn_Transport::
     initialize_problem()
     {
-        problem_.clear();
+        problem_ = unique_ptr<Epetra_LinearProblem> (new Epetra_LinearProblem(matrix_.get(), lhs_.get(), rhs_.get()));
         
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-        {
-            problem_.emplace_back(&matrix_[g], &lhs_[g], &rhs_[g]);
-        }
-
         return 0;
     }
 
     int SPn_Transport::
     initialize_solver()
     {
-        solver_.clear();
+        solver_ = unique_ptr<Amesos_BaseSolver> (factory_.Create(solver_type_, *problem_));
         
-        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+        if (solver_ == NULL)
         {
-            solver_.push_back(factory_.Create(solver_type_, problem_[g]));
-                
-            if (solver_.back() == NULL)
-            {
-                cerr << "Specified solver \"" << solver_type_ << "\" is not available." << endl;
-            }
-        
-            solver_.back()->SetParameters(list_);
-                
-            solver_.back()->SymbolicFactorization();
-                
-            solver_.back()->NumericFactorization();
+            cerr << "Specified solver \"" << solver_type_ << "\" is not available." << endl;
         }
-
+        
+        solver_->SetParameters(list_);
+        
         return 0;
     }
 
     // collision and streaming
     double SPn_Transport::
-    compute_l(unsigned cell, unsigned group, unsigned moment)
+    compute_l(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment)
     {
         if (moment >= 2)
         {
             unsigned k = pow(moment / (moment - 1), 2) * (2 * moment - 3)/(2 * moment + 1);
             
-            return pow(2 / mesh_.cell_length(cell), 2) * (k * data_.d(cell, group, moment - 2) + data_.d(cell, group, moment));
+            return pow(2 / mesh_.cell_length(cell), 2) * (k * compute_d(cell, from_group, to_group, moment - 2) + compute_d(cell, from_group, to_group, moment));
         }
         else
         {
-            return pow(2 / mesh_.cell_length(cell), 2) * data_.d(cell, group, moment);
+            return pow(2 / mesh_.cell_length(cell), 2) * compute_d(cell, from_group, to_group, moment);
         }            
     }
-
+    
     // collision and streaming, n-2
     double SPn_Transport::
-    compute_ll(unsigned cell, unsigned group, unsigned moment)
+    compute_ll(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment)
     {
         if (moment >= 2)
         {
             unsigned k = moment / (2 * moment + 1) * (2 * moment - 3) / (moment - 1);
             
-            return pow(2 / mesh_.cell_length(cell), 2) * (k * data_.d(cell, group, moment - 2) + data_.d(cell, group, moment));
+            return pow(2 / mesh_.cell_length(cell), 2) * (k * compute_d(cell, from_group, to_group, moment - 2) + compute_d(cell, from_group, to_group, moment));
         }
         else
         {
@@ -401,10 +297,54 @@ namespace transport_ns
 
     // collision and streaming, n+2
     double SPn_Transport::
-    compute_lu(unsigned cell, unsigned group, unsigned moment)
+    compute_lu(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment)
     {
         unsigned k = (moment + 2) / (moment + 1);
+        
+        return pow(2 / mesh_.cell_length(cell), 2) * (k * compute_d(cell, from_group, to_group, moment));
+    }
 
-        return pow(2 / mesh_.cell_length(cell), 2) * (k * data_.d(cell, group, moment));
+    int SPn_Transport::
+    initialize_d()
+    {
+        Epetra_SerialDenseSolver solver;
+        
+        d_.resize(pow(data_.number_of_groups(), 2) * mesh_.number_of_cells() * (data_.number_of_scattering_moments() - 1), 0);
+        
+        for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+        {
+            for (unsigned n = 0; n < data_.number_of_scattering_moments() - 1; ++n)
+            {
+                Epetra_SerialDenseMatrix invert_matrix (data_.number_of_groups(), data_.number_of_groups());
+                
+                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                {
+                    invert_matrix(g, g) += data_.sigma_t(i, g);
+                }
+                
+                for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                {
+                    for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                    {
+                        invert_matrix(gf, gt) -= data_.sigma_s(i, gf, gt, n+1);
+                    }
+                }
+
+                solver.SetMatrix(invert_matrix);
+                solver.Invert();
+                
+                for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                {
+                    for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                    {
+                        unsigned k = gf + data_.number_of_groups() * (gt + data_.number_of_groups() * (i + mesh_.number_of_cells() * n));
+
+                        d_[k] = pow(n+1, 2) / ((2*n+1) * (2*n+3)) * invert_matrix(gf, gt);
+                    }
+                }
+            }
+        }
+
+        return 0;
     }
 }

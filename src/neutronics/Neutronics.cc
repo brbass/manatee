@@ -6,6 +6,7 @@
 #include "Data.hh"
 #include "Mesh.hh"
 #include "Parser.hh"
+#include "SP1_Transport.hh"
 #include "SPn_Transport.hh"
 
 namespace neutronics_ns
@@ -83,11 +84,14 @@ namespace neutronics_ns
                          nu_sigma_f,
                          chi,
                          boundary_conditions);
-
-        unsigned number_of_moments = (number_of_scattering_moments - 1) / 2;
         
-        transport_ = new SPn_Transport(number_of_moments,
-                                       *data_,
+        // unsigned number_of_moments = number_of_scattering_moments / 2;
+        
+        // transport_ = new SPn_Transport(number_of_moments,
+        //                                *data_,
+        //                                *mesh_);
+
+        transport_ = new SP1_Transport(*data_,
                                        *mesh_);
     }
     

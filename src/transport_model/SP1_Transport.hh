@@ -1,5 +1,5 @@
-#ifndef SPn_Transport_hh
-#define SPn_Transport_hh
+#ifndef SP1_Transport_hh
+#define SP1_Transport_hh
 
 #include <iostream>
 #include <cmath>
@@ -24,11 +24,10 @@ namespace transport_ns
     using namespace data_ns;
     using namespace mesh_ns;
     
-    class SPn_Transport
+    class SP1_Transport
     {
     private:
         
-        unsigned number_of_even_moments_;
         unsigned number_of_edges_;
         unsigned max_num_iterations_ = 1000;
         
@@ -82,29 +81,26 @@ namespace transport_ns
             return my_global_elements_[local_index] / number_of_edges_;
         }
 
-        inline double compute_d(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment)
+        inline double compute_d(unsigned cell, unsigned from_group, unsigned to_group)
         {
-            return d_[from_group + data_.number_of_groups() * (to_group + data_.number_of_groups() * (cell + mesh_.number_of_cells() * moment))];
+            return d_[from_group + data_.number_of_groups() * (to_group + data_.number_of_groups() * cell)];
         }
         
-        double compute_l(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment);
-        double compute_ll(unsigned cell, unsigned from_group, unsigned to_group,unsigned moment);
-        double compute_lu(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment);
+        double compute_l(unsigned cell, unsigned from_group, unsigned to_group);
         
     public:
 
-        SPn_Transport(unsigned number_of_even_moments,
-                      Data &data,
+        SP1_Transport(Data &data,
                       Mesh &mesh);
 
-        ~SPn_Transport();
+        ~SP1_Transport();
         
         int solve();
 
         void print_scalar_flux()
         {
             // std::cout << "MATRIX" << std::endl;
-            std::cout << *matrix_ << std::endl;
+            //std::cout << *matrix_ << std::endl;
             
             // std::cout << "RHS" << std::endl;
             // std::cout << *rhs_ << std::endl;
@@ -112,7 +108,7 @@ namespace transport_ns
             // std::cout << "LHS" << std::endl;
             std::cout << *lhs_ << std::endl;
             
-            plot_scalar_flux();
+            //plot_scalar_flux();
         }
 
         void plot_scalar_flux()

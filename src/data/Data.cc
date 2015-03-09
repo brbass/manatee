@@ -57,7 +57,6 @@ namespace data_ns
                     unsigned k1 = g + number_of_groups_ * (i + number_of_cells_ * m);
                     unsigned k2 = g + number_of_groups_ * i;
 
-                    d_[k1] = 1.0 * ((m+1)*(m+1))/((2*m+1)*(2*m+3)) * (sigma_t_[k2] - sum);
                 }
             }
         }

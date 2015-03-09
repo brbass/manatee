@@ -1,5 +1,5 @@
-#ifndef SPn_Transport_hh
-#define SPn_Transport_hh
+#ifndef SP1_Transport_hh
+#define SP1_Transport_hh
 
 #include <iostream>
 #include <cmath>
@@ -24,11 +24,10 @@ namespace transport_ns
     using namespace data_ns;
     using namespace mesh_ns;
     
-    class SPn_Transport
+    class SP1_Transport
     {
     private:
         
-        unsigned number_of_even_moments_;
         unsigned number_of_edges_;
         unsigned max_num_iterations_ = 1000;
         
@@ -88,16 +87,14 @@ namespace transport_ns
         }
         
         double compute_l(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment);
-        double compute_ll(unsigned cell, unsigned from_group, unsigned to_group,unsigned moment);
         double compute_lu(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment);
         
     public:
 
-        SPn_Transport(unsigned number_of_even_moments,
-                      Data &data,
+        SP1_Transport(Data &data,
                       Mesh &mesh);
 
-        ~SPn_Transport();
+        ~SP1_Transport();
         
         int solve();
 
