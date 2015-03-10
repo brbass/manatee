@@ -65,9 +65,11 @@ namespace transport_ns
         
         solver_->Solve();
         
+        solver_->PrintStatus();
+        
         return 0;
     }
-
+    
     int SP1_Transport::
     initialize_matrix()
     {
@@ -82,7 +84,7 @@ namespace transport_ns
         }
         
         matrix_ = unique_ptr<Epetra_FECrsMatrix> (new Epetra_FECrsMatrix (Copy, *map_, &num_entries_per_row_[0], true));
-
+        
         unsigned n = 0;
         
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
@@ -146,45 +148,49 @@ namespace transport_ns
                     }
                 }
             }
+            
+            // if (i == 0)
+            // {
+            //     for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+            //     {
+            //         unsigned o = 0;
+                    
+            //         unsigned k1 = o + mesh_.number_of_nodes() * gt;
 
-            if (i == 0)
-            {
-                for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
-                {
-                    for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
-                    {
-                        unsigned o = 0;
-
-                        unsigned k1 = o + mesh_.number_of_nodes() * gt;
+            //         for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+            //         {
+            //             for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
+            //             {
+            //                 unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
                             
-                        for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
-                        {
-                            unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
-                                
-                            fill_matrix(k1, k2) = 0;
-                        }
-                    }
-                }
-            }
-            else if (i == mesh_.number_of_cells() - 1)
-            {
-                for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
-                {
-                    for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
-                    {
-                        unsigned o = 1;
+            //                 fill_matrix(k1, k2) = 0;
+            //             }
+            //         }
+
+            //         fill_matrix(k1, k1) = 1;
+            //     }
+            // }
+            // else if (i == mesh_.number_of_cells() - 1)
+            // {
+            //     for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+            //     {
+            //         unsigned o = 1;
                         
-                        unsigned k1 = o + mesh_.number_of_nodes() * gt;
+            //         unsigned k1 = o + mesh_.number_of_nodes() * gt;
                             
-                        for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
-                        {
-                            unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
+            //         for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+            //         {
+            //             for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
+            //             {
+            //                 unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
                             
-                            fill_matrix(k1, k2) = 0;
-                        }
-                    }
-                }
-            }
+            //                 fill_matrix(k1, k2) = 0;
+            //             }
+            //         }
+
+            //         fill_matrix(k1, k1) = 1;
+            //     }
+            // }
             
             matrix_->InsertGlobalValues(fill_vector, fill_matrix);
         }
@@ -198,7 +204,7 @@ namespace transport_ns
     initialize_lhs()
     {
         lhs_ = unique_ptr<Epetra_Vector> (new Epetra_Vector(*map_));
-        lhs_->PutScalar(1.0);
+        lhs_->PutScalar(7.7);
         
         return 0;
     }
@@ -216,12 +222,15 @@ namespace transport_ns
                 for (unsigned o = 0; o < mesh_.number_of_nodes(); ++o)
                 {
                     unsigned k = o + i + number_of_edges_ * g;
-                    
-                    (*rhs_)[k] += data_.internal_source(i, g);
+
+                    // if ((i != 0 || o != 0) && (i != mesh_.number_of_cells() - 1 || o != 1))
+                    // {
+                        (*rhs_)[k] += data_.internal_source(i, g);
+                    // }
                 }
             }
         }
-        
+
         return 0;
     }
 
@@ -242,6 +251,9 @@ namespace transport_ns
         {
             cerr << "Specified solver \"" << solver_type_ << "\" is not available." << endl;
         }
+        
+        list_.set("PrintTiming", true);
+        list_.set("PrintStatus", true);
         
         solver_->SetParameters(list_);
         

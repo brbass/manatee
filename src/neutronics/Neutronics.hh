@@ -24,7 +24,8 @@ namespace neutronics_ns
 
         Data *data_;
         Mesh *mesh_;
-        SP1_Transport *transport_;
+        SP1_Transport *sp1_transport_;
+        SPn_Transport *spn_transport_;
         
         unsigned number_of_dimensions_;
         unsigned number_of_cells_;
@@ -69,7 +70,8 @@ namespace neutronics_ns
 
         void print_scalar_flux()
         {
-            transport_->print_scalar_flux();
+            //spn_transport_->print_scalar_flux();
+            sp1_transport_->print_scalar_flux();
         }
     };
 }

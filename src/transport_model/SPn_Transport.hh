@@ -103,16 +103,17 @@ namespace transport_ns
 
         void print_scalar_flux()
         {
-            // std::cout << "MATRIX" << std::endl;
+            std::cout << "SPn_Transport" << std::endl;
+            std::cout << "MATRIX" << std::endl;
             std::cout << *matrix_ << std::endl;
             
-            // std::cout << "RHS" << std::endl;
-            // std::cout << *rhs_ << std::endl;
+            std::cout << "RHS" << std::endl;
+            std::cout << *rhs_ << std::endl;
             
-            // std::cout << "LHS" << std::endl;
+            std::cout << "LHS" << std::endl;
             std::cout << *lhs_ << std::endl;
             
-            plot_scalar_flux();
+            // plot_scalar_flux();
         }
 
         void plot_scalar_flux()

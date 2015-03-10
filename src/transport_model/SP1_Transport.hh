@@ -60,7 +60,7 @@ namespace transport_ns
         string solver_type_ = "Klu";
         unique_ptr<Amesos_BaseSolver> solver_;
         Amesos factory_;
-
+        
         Teuchos::ParameterList list_;
         
         int initialize_d();
@@ -75,12 +75,12 @@ namespace transport_ns
         {
             return my_global_elements_[local_index] % number_of_edges_;
         }
-
+        
         inline int local_to_moment(int local_index)
         {
             return my_global_elements_[local_index] / number_of_edges_;
         }
-
+        
         inline double compute_d(unsigned cell, unsigned from_group, unsigned to_group)
         {
             return d_[from_group + data_.number_of_groups() * (to_group + data_.number_of_groups() * cell)];
@@ -89,28 +89,29 @@ namespace transport_ns
         double compute_l(unsigned cell, unsigned from_group, unsigned to_group);
         
     public:
-
+        
         SP1_Transport(Data &data,
                       Mesh &mesh);
-
+        
         ~SP1_Transport();
         
         int solve();
-
+        
         void print_scalar_flux()
         {
-            // std::cout << "MATRIX" << std::endl;
-            //std::cout << *matrix_ << std::endl;
+            std::cout << "SP1_Transport" << std::endl;
+            std::cout << "MATRIX" << std::endl;
+            std::cout << *matrix_ << std::endl;
             
-            // std::cout << "RHS" << std::endl;
-            // std::cout << *rhs_ << std::endl;
+            std::cout << "RHS" << std::endl;
+            std::cout << *rhs_ << std::endl;
             
-            // std::cout << "LHS" << std::endl;
+            std::cout << "LHS" << std::endl;
             std::cout << *lhs_ << std::endl;
             
             //plot_scalar_flux();
         }
-
+        
         void plot_scalar_flux()
         {
             unsigned lines = 20;
@@ -135,7 +136,7 @@ namespace transport_ns
                             max = temp1[i];
                         }
                     }
-
+                    
                     std::cout << "(phi_max = " << max << ")" << std::endl;
                     
                     vector<unsigned> temp2(number_of_edges_,0);
@@ -163,11 +164,12 @@ namespace transport_ns
                         }
                         std::cout << std::endl;
                     }
-
+                    
                     std::cout << std::endl;
                 }
             }
         }
     };
 }
+
 #endif

@@ -37,9 +37,9 @@ namespace neutronics_ns
         parser.parse_data(sigma_s_, "sigma_s");
         parser.parse_data(nu_sigma_f_, "nu_sigma_f");
         parser.parse_data(chi_, "chi");
-
+        
         parser.parse_data(boundary_conditions_, "boundary_conditions");
-
+        
         Neutronics(number_of_dimensions_,
                    number_of_cells_,
                    number_of_groups_,
@@ -54,7 +54,7 @@ namespace neutronics_ns
                    chi_,
                    boundary_conditions_);
     }
-
+    
     Neutronics::
     Neutronics(unsigned &number_of_dimensions,
                unsigned &number_of_cells,
@@ -85,14 +85,14 @@ namespace neutronics_ns
                          chi,
                          boundary_conditions);
         
-        // unsigned number_of_moments = number_of_scattering_moments / 2;
+        unsigned number_of_moments = number_of_scattering_moments / 2;
         
-        // transport_ = new SPn_Transport(number_of_moments,
-        //                                *data_,
-        //                                *mesh_);
+        spn_transport_ = new SPn_Transport(number_of_moments,
+                                           *data_,
+                                           *mesh_);
 
-        transport_ = new SP1_Transport(*data_,
-                                       *mesh_);
+        sp1_transport_ = new SP1_Transport(*data_,
+                                           *mesh_);
     }
     
     Neutronics::
@@ -100,12 +100,14 @@ namespace neutronics_ns
     {
         delete data_;
         delete mesh_;
-        delete transport_;
+        delete spn_transport_;
+        delete sp1_transport_;
     }
 
     void Neutronics::
     solve()
     {
-        transport_->solve();
+        spn_transport_->solve();
+        sp1_transport_->solve();
     }
 }
