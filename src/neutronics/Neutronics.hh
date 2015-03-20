@@ -1,6 +1,7 @@
 #ifndef Neutronics_hh
 #define Neutronics_hh
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,7 @@
 namespace neutronics_ns
 {
     using std::string;
+    using std::unique_ptr;
     using std::vector;
     using namespace data_ns;
     using namespace mesh_ns;
@@ -22,10 +24,10 @@ namespace neutronics_ns
         
     private:
 
-        Data *data_;
-        Mesh *mesh_;
-        SP1_Transport *sp1_transport_;
-        SPn_Transport *spn_transport_;
+        unique_ptr<Data> data_;
+        unique_ptr<Mesh> mesh_;
+        unique_ptr<SP1_Transport> sp1_transport_;
+        unique_ptr<SPn_Transport> spn_transport_;
         
         unsigned number_of_dimensions_;
         unsigned number_of_cells_;
@@ -63,8 +65,6 @@ namespace neutronics_ns
                    vector<double> &nu_sigma_f,
                    vector<double> &chi,
                    vector<string> &boundary_conditions);
-
-        ~Neutronics();
 
         void solve();
 

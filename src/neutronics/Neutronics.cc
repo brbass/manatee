@@ -70,44 +70,35 @@ namespace neutronics_ns
                vector<double> &chi,
                vector<string> &boundary_conditions)
     {
-        mesh_ = new Mesh(number_of_dimensions,
-                         number_of_cells_per_dimension,
-                         side_length);
+        mesh_ = unique_ptr<Mesh> (new Mesh(number_of_dimensions,
+                                           number_of_cells_per_dimension,
+                                           side_length));
         
-        data_ = new Data(number_of_cells,
-                         number_of_groups,
-                         number_of_scattering_moments,
-                         internal_source,
-                         boundary_sources,
-                         sigma_t,
-                         sigma_s,
-                         nu_sigma_f,
-                         chi,
-                         boundary_conditions);
+        data_ = unique_ptr<Data> (new Data(number_of_cells,
+                                           number_of_groups,
+                                           number_of_scattering_moments,
+                                           internal_source,
+                                           boundary_sources,
+                                           sigma_t,
+                                           sigma_s,
+                                           nu_sigma_f,
+                                           chi,
+                                           boundary_conditions));
         
-        unsigned number_of_moments = number_of_scattering_moments / 2;
+        // unsigned number_of_moments = number_of_scattering_moments / 2;
         
-        spn_transport_ = new SPn_Transport(number_of_moments,
-                                           *data_,
-                                           *mesh_);
+        // spn_transport_ = unique_ptr<SPn_Transport> (new SPn_Transport(number_of_moments,
+        //                                                              *data_,
+        //                                                              *mesh_));
 
-        sp1_transport_ = new SP1_Transport(*data_,
-                                           *mesh_);
+        sp1_transport_ = unique_ptr<SP1_Transport> (new SP1_Transport(*data_,
+                                                                      *mesh_));
     }
     
-    Neutronics::
-    ~Neutronics()
-    {
-        delete data_;
-        delete mesh_;
-        delete spn_transport_;
-        delete sp1_transport_;
-    }
-
     void Neutronics::
     solve()
     {
-        spn_transport_->solve();
+        // spn_transport_->solve();
         sp1_transport_->solve();
     }
 }

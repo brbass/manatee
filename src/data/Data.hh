@@ -60,11 +60,11 @@ namespace data_ns
             return internal_source_[group + number_of_groups_ * cell];
         }
     
-        inline double boundary_source(unsigned ordinate, unsigned group)
+        inline double boundary_source(unsigned boundary, unsigned group)
         {
-            return boundary_sources_[group + number_of_groups_ * ordinate];
+            return boundary_sources_[group + number_of_groups_ * boundary];
         }
-    
+        
         inline double sigma_t(unsigned cell, unsigned group)
         {
             return sigma_t_[group + number_of_groups_ * cell];

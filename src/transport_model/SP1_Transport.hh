@@ -93,8 +93,6 @@ namespace transport_ns
         SP1_Transport(Data &data,
                       Mesh &mesh);
         
-        ~SP1_Transport();
-        
         int solve();
         
         void print_scalar_flux()

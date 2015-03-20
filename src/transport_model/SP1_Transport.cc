@@ -42,18 +42,13 @@ namespace transport_ns
 
         comm_ = unique_ptr<Epetra_MpiComm> (new Epetra_MpiComm(MPI_COMM_WORLD));
         map_ = unique_ptr<Epetra_Map> (new Epetra_Map(num_global_elements_, index_base_, *comm_));
-
+        
         initialize_d();
         initialize_matrix();
         initialize_lhs();
         initialize_rhs();
         initialize_problem();
         initialize_solver();
-    }
-
-    SP1_Transport::
-    ~SP1_Transport()
-    {
     }
     
     int SP1_Transport::
@@ -103,7 +98,7 @@ namespace transport_ns
                     for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
                     {
                         unsigned k2 = o2 + mesh_.number_of_nodes() * g;
-                                
+                        
                         fill_matrix(k1, k2) += data_.sigma_t(i, g) * mesh_.stiffness(i, o1 + 1, o2 + 1); // 1
                     }
                 }
@@ -119,13 +114,13 @@ namespace transport_ns
                     {
                         unsigned k1 = o1 + mesh_.number_of_nodes() * gt;
                             
-                        for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
+                        for (unsigned o2 = 0; o2 < mesh_.number_of_nodes(); ++o2)
                         {
                             unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
                                 
                             fill_matrix(k1, k2) -= l * mesh_.stiffness_moment(i, o1 + 1, o2 + 1); // 2
                         }
-                            
+                        
                         fill_vector(k1) = i + o1 + number_of_edges_ * gt;
                     }
                 }
@@ -133,12 +128,12 @@ namespace transport_ns
 
             for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
             {
-                for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
                 {
-                    for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
+                    unsigned k1 = o1 + mesh_.number_of_nodes() * gt;
+
+                    for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
                     {
-                        unsigned k1 = o1 + mesh_.number_of_nodes() * gt;
-                            
                         for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
                         {
                             unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
@@ -149,48 +144,40 @@ namespace transport_ns
                 }
             }
             
-            // if (i == 0)
-            // {
-            //     for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
-            //     {
-            //         unsigned o = 0;
-                    
-            //         unsigned k1 = o + mesh_.number_of_nodes() * gt;
+            if (i == 0)
+            {
+                for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                { 
+                    for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                    {
+                        unsigned k1 = 0 + mesh_.number_of_nodes() * gt;
+                        unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
 
-            //         for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
-            //         {
-            //             for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
-            //             {
-            //                 unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
-                            
-            //                 fill_matrix(k1, k2) = 0;
-            //             }
-            //         }
-
-            //         fill_matrix(k1, k1) = 1;
-            //     }
-            // }
-            // else if (i == mesh_.number_of_cells() - 1)
-            // {
-            //     for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
-            //     {
-            //         unsigned o = 1;
+                        fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt) + 1;
                         
-            //         unsigned k1 = o + mesh_.number_of_nodes() * gt;
-                            
-            //         for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
-            //         {
-            //             for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
-            //             {
-            //                 unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
-                            
-            //                 fill_matrix(k1, k2) = 0;
-            //             }
-            //         }
+                        k2 = 1 + mesh_.number_of_nodes() * gf;
 
-            //         fill_matrix(k1, k1) = 1;
-            //     }
-            // }
+                        fill_matrix(k1, k2) = -2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                    }
+                }
+            }
+            if (i == mesh_.number_of_cells() - 1)
+            {
+                for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                { 
+                    for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                    {
+                        unsigned k1 = 1 + mesh_.number_of_nodes() * gt;
+                        unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
+                        
+                        fill_matrix(k1, k2) = -2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        
+                        k2 = 1 + mesh_.number_of_nodes() * gf;
+                        
+                        fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt) + 1;
+                    }
+                }
+            }
             
             matrix_->InsertGlobalValues(fill_vector, fill_matrix);
         }
@@ -214,6 +201,9 @@ namespace transport_ns
     {
         rhs_ = unique_ptr<Epetra_Vector> (new Epetra_Vector(*map_));
         rhs_->PutScalar(0.0);
+
+        double jl = 0.25;
+        double jr = 0.25;
         
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
@@ -223,14 +213,28 @@ namespace transport_ns
                 {
                     unsigned k = o + i + number_of_edges_ * g;
 
-                    // if ((i != 0 || o != 0) && (i != mesh_.number_of_cells() - 1 || o != 1))
-                    // {
-                        (*rhs_)[k] += data_.internal_source(i, g);
-                    // }
+                    (*rhs_)[k] += data_.internal_source(i, g);
                 }
             }
         }
 
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+        {
+            unsigned i = 0;
+            unsigned o = 0;
+            unsigned k = o + i + number_of_edges_ * g;
+            
+            (*rhs_)[k] = 4 * jl;
+        }
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+        {
+            unsigned i = mesh_.number_of_cells() - 1;
+            unsigned o = 1;
+            unsigned k = o + i + number_of_edges_ * g;
+            
+            (*rhs_)[k] = 4 * jr;
+        }
+        
         return 0;
     }
 
