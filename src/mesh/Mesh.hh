@@ -17,19 +17,17 @@ namespace mesh_ns
 
     private:
     
-        unsigned &number_of_dimensions_;
         unsigned number_of_cells_;
-        unsigned number_of_nodes_ = 2;
+        unsigned number_of_nodes_ = 3;
         
         vector<Finite_Element> elements_;
-
+        
         int check_size(unsigned vector_size, unsigned expected_size, string vector_name);
 
     public:
     
-        Mesh(unsigned &number_of_dimensions,
-             vector<unsigned> &number_of_cells_per_dimension,
-             vector<double> &side_length);
+        Mesh(unsigned &number_of_cells,
+             double &side_length);
 
         int check();
         
@@ -37,11 +35,6 @@ namespace mesh_ns
         //      unsigned number_of_cells,
         //      vector<double> &cell_boundaries);
 
-        inline unsigned number_of_dimensions()
-        {
-            return number_of_dimensions_;
-        }
-        
         inline unsigned number_of_cells()
         {
             return number_of_cells_;
@@ -57,14 +50,9 @@ namespace mesh_ns
             return elements_[cell].cell_length();
         }
         
-        inline double stiffness(unsigned cell, unsigned a, unsigned b)
+        inline double stiffness(unsigned cell, unsigned kb, unsigned kw, unsigned kd)
         {
-            return elements_[cell].stiffness(a, b);
-        }
-
-        inline double stiffness_moment(unsigned cell, unsigned a, unsigned b)
-        {
-            return elements_[cell].stiffness_moment(a, b);
+            return elements_[cell].stiffness(kb, kw, kd);
         }
     };
 }
