@@ -13,11 +13,11 @@ int test_neutronics()
     unsigned checksum = 0;
     
     unsigned number_of_dimensions = 1;
-    unsigned number_of_cells = 10;
+    unsigned number_of_cells = 100;
     unsigned number_of_groups = 1;
     unsigned number_of_scattering_moments = 2;
     
-    vector<double> side_length(1, 1.0);
+    vector<double> side_length(1, 10.0);
     vector<unsigned> number_of_cells_per_dimension(1, number_of_cells);
     vector<double> internal_source(number_of_cells * number_of_groups, 1.0);
     vector<double> boundary_sources(number_of_scattering_moments * 2, 0.0);

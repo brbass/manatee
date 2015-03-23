@@ -86,8 +86,6 @@ namespace transport_ns
             return d_[from_group + data_.number_of_groups() * (to_group + data_.number_of_groups() * cell)];
         }
         
-        double compute_l(unsigned cell, unsigned from_group, unsigned to_group);
-        
     public:
         
         SP1_Transport(Data &data,
@@ -98,11 +96,11 @@ namespace transport_ns
         void print_scalar_flux()
         {
             std::cout << "SP1_Transport" << std::endl;
-            std::cout << "MATRIX" << std::endl;
-            std::cout << *matrix_ << std::endl;
+            // std::cout << "MATRIX" << std::endl;
+            // std::cout << *matrix_ << std::endl;
             
-            std::cout << "RHS" << std::endl;
-            std::cout << *rhs_ << std::endl;
+            // std::cout << "RHS" << std::endl;
+            // std::cout << *rhs_ << std::endl;
             
             std::cout << "LHS" << std::endl;
             std::cout << *lhs_ << std::endl;

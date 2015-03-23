@@ -95,33 +95,11 @@ namespace transport_ns
                 {
                     unsigned k1 = o1 + mesh_.number_of_nodes() * g;
                     
-                    for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
+                    for (unsigned o2 = 0; o2 < mesh_.number_of_nodes(); ++o2)
                     {
                         unsigned k2 = o2 + mesh_.number_of_nodes() * g;
                         
-                        fill_matrix(k1, k2) += data_.sigma_t(i, g) * mesh_.stiffness(i, o1 + 1, o2 + 1); // 1
-                    }
-                }
-            }
-            
-            for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
-            {
-                for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
-                {
-                    double l = compute_l(i, gf, gt);
-                    
-                    for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
-                    {
-                        unsigned k1 = o1 + mesh_.number_of_nodes() * gt;
-                            
-                        for (unsigned o2 = 0; o2 < mesh_.number_of_nodes(); ++o2)
-                        {
-                            unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
-                                
-                            fill_matrix(k1, k2) -= l * mesh_.stiffness_moment(i, o1 + 1, o2 + 1); // 2
-                        }
-                        
-                        fill_vector(k1) = i + o1 + number_of_edges_ * gt;
+                        fill_matrix(k1, k2) += data_.sigma_t(i, g) * mesh_.stiffness(i, o1, o2);
                     }
                 }
             }
@@ -138,8 +116,30 @@ namespace transport_ns
                         {
                             unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
                                 
-                            fill_matrix(k1, k2) -= data_.sigma_s(i, gf, gt, n) * mesh_.stiffness(i, o1 + 1, o2 + 1); // 16
+                            fill_matrix(k1, k2) -= data_.sigma_s(i, gf, gt, n) * mesh_.stiffness(i, o1, o2);
                         }
+                    }
+                }
+            }
+            
+            for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+            {
+                for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                {
+                    double l = pow(2 / mesh_.cell_length(i), 2) * compute_d(i, gf, gt);
+                    
+                    for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
+                    {
+                        unsigned k1 = o1 + mesh_.number_of_nodes() * gt;
+                        
+                        for (unsigned o2 = 0; o2 < mesh_.number_of_nodes(); ++o2)
+                        {
+                            unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
+                            
+                            fill_matrix(k1, k2) -= l * mesh_.stiffness_moment(i, o1, o2);
+                        }
+                        
+                        fill_vector(k1) = i + o1 + number_of_edges_ * gt;
                     }
                 }
             }
@@ -153,14 +153,18 @@ namespace transport_ns
                         unsigned k1 = 0 + mesh_.number_of_nodes() * gt;
                         unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
 
-                        fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt) + 1;
+                        fill_matrix(k1, k2) = 1 + 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        // fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        // fill_matrix(k1, k2) = 1;
                         
                         k2 = 1 + mesh_.number_of_nodes() * gf;
-
-                        fill_matrix(k1, k2) = -2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        
+                        fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        // fill_matrix(k1, k2) = 0;
                     }
                 }
             }
+            
             if (i == mesh_.number_of_cells() - 1)
             {
                 for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
@@ -170,11 +174,14 @@ namespace transport_ns
                         unsigned k1 = 1 + mesh_.number_of_nodes() * gt;
                         unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
                         
-                        fill_matrix(k1, k2) = -2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        // fill_matrix(k1, k2) = 0;
                         
                         k2 = 1 + mesh_.number_of_nodes() * gf;
                         
-                        fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt) + 1;
+                        fill_matrix(k1, k2) = 1 + 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        // fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        // fill_matrix(k1, k2) = 1;
                     }
                 }
             }
@@ -191,7 +198,7 @@ namespace transport_ns
     initialize_lhs()
     {
         lhs_ = unique_ptr<Epetra_Vector> (new Epetra_Vector(*map_));
-        lhs_->PutScalar(7.7);
+        lhs_->PutScalar(1.0);
         
         return 0;
     }
@@ -201,9 +208,9 @@ namespace transport_ns
     {
         rhs_ = unique_ptr<Epetra_Vector> (new Epetra_Vector(*map_));
         rhs_->PutScalar(0.0);
-
-        double jl = 0.25;
-        double jr = 0.25;
+        
+        double jl = 0.0;
+        double jr = 0.0;
         
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
@@ -212,12 +219,12 @@ namespace transport_ns
                 for (unsigned o = 0; o < mesh_.number_of_nodes(); ++o)
                 {
                     unsigned k = o + i + number_of_edges_ * g;
-
+                    
                     (*rhs_)[k] += data_.internal_source(i, g);
                 }
             }
         }
-
+        
         for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
             unsigned i = 0;
@@ -264,13 +271,6 @@ namespace transport_ns
         return 0;
     }
 
-    // collision and streaming
-    double SP1_Transport::
-    compute_l(unsigned cell, unsigned from_group, unsigned to_group)
-    {
-        return pow(2 / mesh_.cell_length(cell), 2) * compute_d(cell, from_group, to_group);
-    }
-    
     int SP1_Transport::
     initialize_d()
     {
