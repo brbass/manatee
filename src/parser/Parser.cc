@@ -19,12 +19,12 @@ namespace parser_ns
         
         system(("mkdir -p " + folder_).c_str());
     }
-
+    
     void Parser::
     set_folder(string folder)
     {
         folder_ = folder;
-
+        
         system(("mkdir -p " + folder_).c_str());
     }
     

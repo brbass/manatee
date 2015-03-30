@@ -1,6 +1,5 @@
 #include "Data.hh"
 
-
 #include <iostream>
 #include <string>
 #include <vector>

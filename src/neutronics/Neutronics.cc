@@ -29,7 +29,6 @@ namespace neutronics_ns
         parser.parse_data(number_of_scattering_moments_, "number_of_scattering_moments");
         
         parser.parse_data(side_length_, "side_length");
-        parser.parse_data(number_of_cells_per_dimension_, "number_of_cells_per_dimension");
         
         parser.parse_data(internal_source_, "internal_source");
         parser.parse_data(boundary_sources_, "boundary_sources");
@@ -40,11 +39,9 @@ namespace neutronics_ns
         
         parser.parse_data(boundary_conditions_, "boundary_conditions");
         
-        Neutronics(number_of_dimensions_,
-                   number_of_cells_,
+        Neutronics(number_of_cells_,
                    number_of_groups_,
                    number_of_scattering_moments_,
-                   number_of_cells_per_dimension_,
                    side_length_,
                    internal_source_,
                    boundary_sources_,
@@ -56,12 +53,10 @@ namespace neutronics_ns
     }
     
     Neutronics::
-    Neutronics(unsigned &number_of_dimensions,
-               unsigned &number_of_cells,
+    Neutronics(unsigned &number_of_cells,
                unsigned &number_of_groups,
                unsigned &number_of_scattering_moments,
-               vector<unsigned> &number_of_cells_per_dimension,
-               vector<double> &side_length,
+               double &side_length,
                vector<double> &internal_source,
                vector<double> &boundary_sources,
                vector<double> &sigma_t,
@@ -70,8 +65,7 @@ namespace neutronics_ns
                vector<double> &chi,
                vector<string> &boundary_conditions)
     {
-        mesh_ = unique_ptr<Mesh> (new Mesh(number_of_dimensions,
-                                           number_of_cells_per_dimension,
+        mesh_ = unique_ptr<Mesh> (new Mesh(number_of_cells,
                                            side_length));
         
         data_ = unique_ptr<Data> (new Data(number_of_cells,

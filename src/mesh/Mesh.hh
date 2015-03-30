@@ -18,12 +18,12 @@ namespace mesh_ns
     private:
     
         unsigned number_of_cells_;
-        unsigned number_of_nodes_ = 3;
+        unsigned number_of_nodes_ = 2;
         
         vector<Finite_Element> elements_;
         
         int check_size(unsigned vector_size, unsigned expected_size, string vector_name);
-
+        
     public:
     
         Mesh(unsigned &number_of_cells,
@@ -50,9 +50,9 @@ namespace mesh_ns
             return elements_[cell].cell_length();
         }
         
-        inline double stiffness(unsigned cell, unsigned kb, unsigned kw, unsigned kd)
+        inline double stiffness(unsigned cell, unsigned kb, unsigned kw, unsigned kdb = 0, unsigned kdw = 0)
         {
-            return elements_[cell].stiffness(kb, kw, kd);
+            return elements_[cell].stiffness(kb, kw, kdb, kdw);
         }
     };
 }

@@ -135,7 +135,7 @@ namespace transport_ns
                             {
                                 unsigned k2 = o2 + mesh_.number_of_nodes() * (gf + data_.number_of_groups() * m);
                                 
-                                fill_matrix(k1, k2) -= l * mesh_.stiffness_moment(i, o1 + 1, o2 + 1); // 2
+                                fill_matrix(k1, k2) += l * mesh_.stiffness(i, o1 + 1, o2 + 1, 1, 1); // 2
                             }
                             
                             fill_vector(k1) = i + o1 + number_of_edges_ * (gt + data_.number_of_groups() * m);
@@ -152,7 +152,7 @@ namespace transport_ns
                                 for (unsigned o2 = 0; o2< 2; ++o2)
                                 {
                                     unsigned k2 = o2 + mesh_.number_of_nodes() * (gf + data_.number_of_groups() * m);
-                                    fill_matrix(k1, k2) -= ll * mesh_.stiffness_moment(i, o1 + 1, o2 + 1); // 4
+                                    fill_matrix(k1, k2) -= ll * mesh_.stiffness(i, o1 + 1, o2 + 1, 1, 1); // 4
                                 }
                             }
                         }
@@ -169,7 +169,7 @@ namespace transport_ns
                                 {
                                     unsigned k2 = o2 + mesh_.number_of_nodes() * (gf + data_.number_of_groups() * m);
                                     
-                                    fill_matrix(k1, k2) -= lu * mesh_.stiffness_moment(i, o1 + 1, o2 + 1); // 8
+                                    fill_matrix(k1, k2) -= lu * mesh_.stiffness(i, o1 + 1, o2 + 1, 1, 1); // 8
                                 }
                             }
                         }

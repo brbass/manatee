@@ -81,7 +81,7 @@ namespace transport_ns
             return my_global_elements_[local_index] / number_of_edges_;
         }
         
-        inline double compute_d(unsigned cell, unsigned from_group, unsigned to_group)
+        inline double d(unsigned cell, unsigned from_group, unsigned to_group)
         {
             return d_[from_group + data_.number_of_groups() * (to_group + data_.number_of_groups() * cell)];
         }

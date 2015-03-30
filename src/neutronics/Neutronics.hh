@@ -34,9 +34,8 @@ namespace neutronics_ns
         unsigned number_of_groups_;
         unsigned number_of_scattering_moments_;
 
-        vector<unsigned> number_of_cells_per_dimension_;
-
-        vector<double> side_length_;
+        double side_length_;
+        
         vector<double> internal_source_;
         vector<double> boundary_sources_;
         vector<double> sigma_t_;
@@ -52,12 +51,10 @@ namespace neutronics_ns
 
         Neutronics(string &input_folder);
 
-        Neutronics(unsigned &number_of_dimensions,
-                   unsigned &number_of_cells,
+        Neutronics(unsigned &number_of_cells,
                    unsigned &number_of_groups,
                    unsigned &number_of_scattering_moments,
-                   vector<unsigned> &number_of_cells_per_dimension,
-                   vector<double> &side_length,
+                   double &side_length,
                    vector<double> &internal_source,
                    vector<double> &boundary_sources,
                    vector<double> &sigma_t,

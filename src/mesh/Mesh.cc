@@ -22,7 +22,7 @@ namespace mesh_ns
         for (unsigned i = 0; i < number_of_cells_; ++i)
         {
             elements_.emplace_back(current_position,
-                                   average_cell_length;
+                                   average_cell_length);
                 
             current_position += average_cell_length;
         }
@@ -33,7 +33,7 @@ namespace mesh_ns
     int Mesh::
     check()
     {
-        Int checksum = 0;
+        int checksum = 0;
         
         checksum += check_size(elements_.size(), number_of_cells_, "number_of_cells");
         

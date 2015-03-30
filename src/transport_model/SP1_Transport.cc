@@ -88,6 +88,8 @@ namespace transport_ns
             
             Epetra_SerialDenseMatrix fill_matrix (dims, dims);
             Epetra_IntSerialDenseVector fill_vector (dims);
+
+            double dx2 = pow(mesh_.cell_length(i), 2);
             
             for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
@@ -99,11 +101,11 @@ namespace transport_ns
                     {
                         unsigned k2 = o2 + mesh_.number_of_nodes() * g;
                         
-                        fill_matrix(k1, k2) += data_.sigma_t(i, g) * mesh_.stiffness(i, o1, o2);
+                        fill_matrix(k1, k2) += dx2 / 4 * data_.sigma_t(i, g) * mesh_.stiffness(i, o1, o2);
                     }
                 }
             }
-
+            
             for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
             {
                 for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
@@ -115,8 +117,8 @@ namespace transport_ns
                         for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
                         {
                             unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
-                                
-                            fill_matrix(k1, k2) -= data_.sigma_s(i, gf, gt, n) * mesh_.stiffness(i, o1, o2);
+                            
+                            fill_matrix(k1, k2) -= dx2 / 4 * data_.sigma_s(i, gf, gt, n) * mesh_.stiffness(i, o1, o2);
                         }
                     }
                 }
@@ -126,8 +128,6 @@ namespace transport_ns
             {
                 for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
                 {
-                    double l = pow(2 / mesh_.cell_length(i), 2) * compute_d(i, gf, gt);
-                    
                     for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
                     {
                         unsigned k1 = o1 + mesh_.number_of_nodes() * gt;
@@ -136,7 +136,7 @@ namespace transport_ns
                         {
                             unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
                             
-                            fill_matrix(k1, k2) -= l * mesh_.stiffness_moment(i, o1, o2);
+                            fill_matrix(k1, k2) += d(i, gf, gt) * mesh_.stiffness(i, o1, o2, 1, 1);
                         }
                         
                         fill_vector(k1) = i + o1 + number_of_edges_ * gt;
@@ -153,14 +153,14 @@ namespace transport_ns
                         unsigned k1 = 0 + mesh_.number_of_nodes() * gt;
                         unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
 
-                        fill_matrix(k1, k2) = 1 + 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        // fill_matrix(k1, k2) = 1 + 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
                         // fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        // fill_matrix(k1, k2) = 1;
+                        fill_matrix(k1, k2) = 1;
                         
                         k2 = 1 + mesh_.number_of_nodes() * gf;
                         
-                        fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        // fill_matrix(k1, k2) = 0;
+                        // fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        fill_matrix(k1, k2) = 0;
                     }
                 }
             }
@@ -174,14 +174,14 @@ namespace transport_ns
                         unsigned k1 = 1 + mesh_.number_of_nodes() * gt;
                         unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
                         
-                        fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        // fill_matrix(k1, k2) = 0;
+                        // fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        fill_matrix(k1, k2) = 0;
                         
                         k2 = 1 + mesh_.number_of_nodes() * gf;
                         
-                        fill_matrix(k1, k2) = 1 + 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
+                        // fill_matrix(k1, k2) = 1 + 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
                         // fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        // fill_matrix(k1, k2) = 1;
+                        fill_matrix(k1, k2) = 1;
                     }
                 }
             }
@@ -211,16 +211,18 @@ namespace transport_ns
         
         double jl = 0.0;
         double jr = 0.0;
-        
+
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
+            double dx2 = pow(mesh_.cell_length(i), 2);
+            
             for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
                 for (unsigned o = 0; o < mesh_.number_of_nodes(); ++o)
                 {
                     unsigned k = o + i + number_of_edges_ * g;
                     
-                    (*rhs_)[k] += data_.internal_source(i, g);
+                    (*rhs_)[k] += dx2 / 4 * data_.internal_source(i, g);
                 }
             }
         }
@@ -231,7 +233,7 @@ namespace transport_ns
             unsigned o = 0;
             unsigned k = o + i + number_of_edges_ * g;
             
-            (*rhs_)[k] = 4 * jl;
+            (*rhs_)[k] = jl;
         }
         for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
@@ -239,7 +241,7 @@ namespace transport_ns
             unsigned o = 1;
             unsigned k = o + i + number_of_edges_ * g;
             
-            (*rhs_)[k] = 4 * jr;
+            (*rhs_)[k] = jr;
         }
         
         return 0;
