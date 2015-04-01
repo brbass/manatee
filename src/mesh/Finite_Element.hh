@@ -1,11 +1,12 @@
 #ifndef Finite_Element_hh
 #define Finite_Element_hh
 
+#include <iostream>
+
 namespace mesh_ns
 {
     class Finite_Element
     {
-        
     private:
         
         double cell_center_position_;
@@ -14,8 +15,8 @@ namespace mesh_ns
         // double coeff[3][3] = {{0, -1/2, 1/2},
         //                       {1, 0 , -1},
         //                       {0, 1/2, 1/2}};
-        double coeff[2][2] = {{1/2, -1/2},
-                              {1/2, 1/2}};
+        double coeff[2][2] = {{1.0 / 2.0, -1.0 / 2.0},
+                              {1.0 / 2.0, 1.0 / 2.0}};
         
     public:
 
@@ -42,34 +43,25 @@ namespace mesh_ns
             // return integral of the product
 
             unsigned kd = kdb * kdb + kdw * kdw;
-            
-            // if (kdb==0 && kdw==0)
-            //     kd = 0;
-            // if (kdb==0 && kdw==1)
-            //     kd = 1;
-            // if (kdb==1 && kdw==1)
-            //     kd = 2;
-            // if (kdb==2 && kdw==0)
-            //     kd = 4;
-            // if (kdb==2 && kdw==1)
-            //     kd = 5;
-            // if (kdb==2 && kdw==2)
-            //     kd = 8
-            
+
             // linear
             switch (kd)
             {
             case 0:
-                return 2 * coeff[kb][0] * coeff[kw][0]
-                    + 2/3 * coeff[kb][1] * coeff[kw][1];
+                return 2.0 * coeff[kb][0] * coeff[kw][0]
+                    + 2.0/3.0 * coeff[kb][1] * coeff[kw][1];
+                
             case 1:
                 if (kdb > kdw)
-                    return 2 * coeff[kb][1] * coeff[kw][0];
+                    return 2.0 * coeff[kb][1] * coeff[kw][0];
                 else
-                    return 2 * coeff[kb][0] * coeff[kw][1];
+                    return 2.0 * coeff[kb][0] * coeff[kw][1];
+                
             case 2:
-                return 2 * coeff[kb][1] * coeff[kw][1];
+                return 2.0 * coeff[kb][1] * coeff[kw][1];
+                
             default:
+                std::cout << "stiffness case " << kd << " not available" << std::endl;
                 return 0;
             }
             

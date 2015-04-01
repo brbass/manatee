@@ -12,36 +12,40 @@ int test_neutronics()
     
     unsigned checksum = 0;
     
-    unsigned number_of_dimensions = 1;
-    unsigned number_of_cells = 100;
-    unsigned number_of_groups = 1;
+    unsigned number_of_cells = 10;
+    unsigned number_of_groups = 3;
     unsigned number_of_scattering_moments = 2;
     
-    vector<double> side_length(1, 10.0);
+    double side_length = 1;
     vector<unsigned> number_of_cells_per_dimension(1, number_of_cells);
     vector<double> internal_source(number_of_cells * number_of_groups, 1.0);
-    vector<double> boundary_sources(number_of_scattering_moments * 2, 0.0);
-    vector<double> sigma_t(number_of_cells * number_of_groups, 3.0);
-    vector<double> sigma_s(number_of_cells * number_of_groups * number_of_groups * number_of_scattering_moments, 2);
+    vector<double> boundary_sources(number_of_groups * 2, 1.0);
+    vector<double> sigma_t(number_of_cells * number_of_groups, 0.5);
+    vector<double> sigma_s(number_of_cells * number_of_groups * number_of_groups * number_of_scattering_moments, 0);
     vector<double> nu_sigma_f(number_of_cells * number_of_groups, 0.0);
     vector<double> chi(number_of_cells * number_of_groups, 0.0);
-    vector<string> boundary_conditions(2, "vacuum");
-
-
+    vector<string> boundary_conditions(2, "robin"); // dirichlet, marshak, robin
+    
     for (unsigned i = 0; i < number_of_cells; ++i)
     {
         for (unsigned gf = 0; gf < number_of_groups; ++gf)
         {
             for (unsigned gt = 0; gt < number_of_groups; ++gt)
             {
-                unsigned m = 1;
+                unsigned m = 0;
 
                 unsigned k2 = gf + number_of_groups * (gt + number_of_groups * (i + number_of_cells * m));
-                sigma_s[k2] = 1;
+                sigma_s[k2] = 0.4 / number_of_groups;
+                
+                m = 1;
+
+                k2 = gf + number_of_groups * (gt + number_of_groups * (i + number_of_cells * m));
+                sigma_s[k2] = 0.2 / number_of_groups;
+
             }
         }
     }
-
+    
     // for (unsigned i = 0; i < number_of_cells; ++i)
     // {
     //     for (unsigned gf = 0; gf < number_of_groups; ++gf)
@@ -75,11 +79,9 @@ int test_neutronics()
     //     }
     // }
     
-    Neutronics neutronics(number_of_dimensions,
-                          number_of_cells,
+    Neutronics neutronics(number_of_cells,
                           number_of_groups,
                           number_of_scattering_moments,
-                          number_of_cells_per_dimension,
                           side_length,
                           internal_source,
                           boundary_sources,

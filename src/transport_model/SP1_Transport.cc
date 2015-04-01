@@ -150,18 +150,67 @@ namespace transport_ns
                 { 
                     for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
                     {
-                        unsigned k1 = 0 + mesh_.number_of_nodes() * gt;
-                        unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
-
-                        // fill_matrix(k1, k2) = 1 + 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        // fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        fill_matrix(k1, k2) = 1;
-                        
-                        k2 = 1 + mesh_.number_of_nodes() * gf;
-                        
-                        // fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        fill_matrix(k1, k2) = 0;
+                        unsigned o1 = 0;
+                            
+                        unsigned k1 = o1 + mesh_.number_of_nodes() * gt;
+                            
+                        for (unsigned o2 = 0; o2 < mesh_.number_of_nodes(); ++o2)
+                        {
+                            unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
+                                    
+                            fill_matrix(k1, k2) = 0;
+                        }
                     }
+                }
+                if (data_.boundary_condition(0).compare("dirichlet") == 0)
+                {
+                    for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                    {
+                        unsigned o = 0;
+                            
+                        unsigned k = o + mesh_.number_of_nodes() * g;
+                            
+                        fill_matrix(k, k) = 4;
+                    }
+                }
+                else if (data_.boundary_condition(0).compare("marshak") == 0)
+                {
+                    for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                    { 
+                        for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                        {
+                            unsigned k1 = 0 + mesh_.number_of_nodes() * gt;
+                            unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
+                            unsigned k3 = 1 + mesh_.number_of_nodes() * gf;
+                            
+                            fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * d(i, gf, gt);
+                            fill_matrix(k1, k3) = - 2 / mesh_.cell_length(i) * d(i, gf, gt);
+                        }
+                    }
+                }
+                else if (data_.boundary_condition(0).compare("robin") == 0)
+                {
+                    for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                    { 
+                        for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                        {
+                            unsigned k1 = 0 + mesh_.number_of_nodes() * gt;
+                            unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
+                            unsigned k3 = 1 + mesh_.number_of_nodes() * gf;
+                            
+                            fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * d(i, gf, gt);
+                            fill_matrix(k1, k3) = - 2 / mesh_.cell_length(i) * d(i, gf, gt);
+
+                            if (gt == gf)
+                            {
+                                fill_matrix(k1, k2) += 1;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    cout << "boundary condition " << data_.boundary_condition(0) << " not available" << endl;
                 }
             }
             
@@ -171,21 +220,70 @@ namespace transport_ns
                 { 
                     for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
                     {
-                        unsigned k1 = 1 + mesh_.number_of_nodes() * gt;
-                        unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
-                        
-                        // fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        fill_matrix(k1, k2) = 0;
-                        
-                        k2 = 1 + mesh_.number_of_nodes() * gf;
-                        
-                        // fill_matrix(k1, k2) = 1 + 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        // fill_matrix(k1, k2) = 2 / mesh_.cell_length(i) * compute_d(i, gf, gt);
-                        fill_matrix(k1, k2) = 1;
+                        unsigned o1 = 1;
+                            
+                        unsigned k1 = o1 + mesh_.number_of_nodes() * gt;
+                            
+                        for (unsigned o2 = 0; o2 < mesh_.number_of_nodes(); ++o2)
+                        {
+                            unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
+                                    
+                            fill_matrix(k1, k2) = 0;
+                        }
                     }
                 }
+                if (data_.boundary_condition(1).compare("dirichlet") == 0)
+                {
+                    for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                    {
+                        unsigned o = 1;
+
+                        unsigned k = o + mesh_.number_of_nodes() * g;
+                        
+                        fill_matrix(k, k) = 4;
+                    }
+                }
+                else if (data_.boundary_condition(1).compare("marshak") == 0)
+                {
+                    for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                    { 
+                        for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                        {
+                            unsigned k1 = 1 + mesh_.number_of_nodes() * gt;
+                            unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
+                            unsigned k3 = 1 + mesh_.number_of_nodes() * gf;
+                        
+                            fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * d(i, gf, gt);
+                            fill_matrix(k1, k3) = 2 / mesh_.cell_length(i) * d(i, gf, gt);
+                        }
+                    }
+                }
+                else if (data_.boundary_condition(1).compare("robin") == 0)
+                {
+                    for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                    { 
+                        for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                        {
+                            unsigned k1 = 1 + mesh_.number_of_nodes() * gt;
+                            unsigned k2 = 0 + mesh_.number_of_nodes() * gf;
+                            unsigned k3 = 1 + mesh_.number_of_nodes() * gf;
+                        
+                            fill_matrix(k1, k2) = - 2 / mesh_.cell_length(i) * d(i, gf, gt);
+                            fill_matrix(k1, k3) = 2 / mesh_.cell_length(i) * d(i, gf, gt);
+
+                            if (gt == gf)
+                            {
+                                fill_matrix(k1, k3) += 1;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    cout << "boundary condition " << data_.boundary_condition(1) << " not available" << endl;
+                }
             }
-            
+
             matrix_->InsertGlobalValues(fill_vector, fill_matrix);
         }
         
@@ -209,9 +307,6 @@ namespace transport_ns
         rhs_ = unique_ptr<Epetra_Vector> (new Epetra_Vector(*map_));
         rhs_->PutScalar(0.0);
         
-        double jl = 0.0;
-        double jr = 0.0;
-
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
             double dx2 = pow(mesh_.cell_length(i), 2);
@@ -233,7 +328,7 @@ namespace transport_ns
             unsigned o = 0;
             unsigned k = o + i + number_of_edges_ * g;
             
-            (*rhs_)[k] = jl;
+            (*rhs_)[k] = 4 * data_.boundary_source(0, g);
         }
         for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
@@ -241,7 +336,7 @@ namespace transport_ns
             unsigned o = 1;
             unsigned k = o + i + number_of_edges_ * g;
             
-            (*rhs_)[k] = jr;
+            (*rhs_)[k] = 4 * data_.boundary_source(1, g);
         }
         
         return 0;

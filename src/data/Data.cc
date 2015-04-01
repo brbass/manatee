@@ -68,7 +68,7 @@ namespace data_ns
         int checksum = 0;
         
         checksum += check_size(internal_source_.size(), number_of_cells_ * number_of_groups_, "internal_source");
-        checksum += check_size(boundary_sources_.size(), number_of_scattering_moments_ * 2, "boundary_sources");
+        checksum += check_size(boundary_sources_.size(), number_of_groups_ * 2, "boundary_sources");
         checksum += check_size(sigma_t_.size(), number_of_cells_ * number_of_groups_, "sigma_t");
         checksum += check_size(sigma_s_.size(), number_of_cells_ * number_of_groups_ * number_of_groups_ * number_of_scattering_moments_, "sigma_s");
         checksum += check_size(nu_sigma_f_.size(), number_of_cells_ * number_of_groups_, "nu_sigma_f");
