@@ -1,11 +1,14 @@
 #include "Neutronics.hh"
 
+#include <iostring>
 #include <string>
 #include <vector>
 
 #include "Data.hh"
 #include "Mesh.hh"
+#include "Ordinates.hh"
 #include "Parser.hh"
+#include "Sn_Transport.hh"
 #include "SP1_Transport.hh"
 #include "SPn_Transport.hh"
 
@@ -87,12 +90,62 @@ namespace neutronics_ns
 
         sp1_transport_ = unique_ptr<SP1_Transport> (new SP1_Transport(*data_,
                                                                       *mesh_));
+
+        transport_type_ = "sn_transport";
+    }
+
+    Neutronics::
+    Neutronics(unsigned &number_of_cells,
+               unsigned &number_of_groups,
+               unsigned &number_of_scattering_moments,
+               unsigned &number_of_ordinates,
+               double &side_length,
+               vector<double> &internal_source,
+               vector<double> &boundary_sources,
+               vector<double> &sigma_t,
+               vector<double> &sigma_s,
+               vector<double> &nu_sigma_f,
+               vector<double> &chi,
+               vector<string> &boundary_conditions)
+    {
+        mesh_ = unique_ptr<Mesh> (new Mesh(number_of_cells,
+                                           side_length));
+        
+        data_ = unique_ptr<Data> (new Data(number_of_cells,
+                                           number_of_groups,
+                                           number_of_scattering_moments,
+                                           internal_source,
+                                           boundary_sources,
+                                           sigma_t,
+                                           sigma_s,
+                                           nu_sigma_f,
+                                           chi,
+                                           boundary_conditions));
+        
+        ordinates_ = unique_ptr<Ordinates> (new Ordinates(number_of_ordinates));
+
+        sn_transport_ = unique_ptr<Sn_Transport> (new Sn_Transport(*data_,
+                                                                   *mesh_,
+                                                                   *ordinates_));
+
+        transport_type_ = "sn_transport";
     }
     
     void Neutronics::
     solve()
     {
         // spn_transport_->solve();
-        sp1_transport_->solve();
+        if (transport_type_.compare("sn_transport") == 0)
+        {
+            sn_transport_->solve();
+        }
+        else if (transport_type_.compare("sp1_transport") == 0)
+        {
+            sp1_transport_->solve();
+        }
+        else
+        {
+            cerr << "transport type does not exist" << endl;
+        }
     }
 }

@@ -7,6 +7,7 @@
 
 #include "Data.hh"
 #include "Mesh.hh"
+#include "Sn_Transport.hh"
 #include "SP1_Transport.hh"
 #include "SPn_Transport.hh"
 
@@ -27,7 +28,8 @@ namespace neutronics_ns
         unique_ptr<Data> data_;
         unique_ptr<Mesh> mesh_;
         unique_ptr<SP1_Transport> sp1_transport_;
-        unique_ptr<SPn_Transport> spn_transport_;
+        unique_ptr<SP1_Transport> spn_transport_;
+        unique_ptr<Sn_Transport> sn_transport_;
         
         unsigned number_of_dimensions_;
         unsigned number_of_cells_;
@@ -35,6 +37,8 @@ namespace neutronics_ns
         unsigned number_of_scattering_moments_;
 
         double side_length_;
+
+        string transport_type_;
         
         vector<double> internal_source_;
         vector<double> boundary_sources_;
@@ -67,8 +71,18 @@ namespace neutronics_ns
 
         void print_scalar_flux()
         {
-            //spn_transport_->print_scalar_flux();
-            sp1_transport_->print_scalar_flux();
+            if (transport_type_.compare("sn_transport") == 0)
+            {
+                sn_transport_->print_scalar_flux();
+            }
+            else if (transport_type_.compare("sp1_transport") == 0)
+            {
+                sp1_transport_->print_scalar_flux();
+            }
+            else
+            {
+                cerr << "transport type does not exist" << endl;
+            }
         }
     };
 }

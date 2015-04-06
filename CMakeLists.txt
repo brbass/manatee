@@ -1,11 +1,11 @@
 cmake_minimum_required (VERSION 2.8)
 
-set(CMAKE_C_COMPILER "gcc")
-set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_C_COMPILER "icc")
+set(CMAKE_CXX_COMPILER "icpc")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
 set(CMAKE_VERBOSE_MAKEFILE off)
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_INSTALL_PREFIX /Users/brbass/Documents/college3/research/spn_transport/manatee/bin)
+set(CMAKE_INSTALL_PREFIX /Users/brbass/Documents/college3/research/manatee/bin)
 
 project(Manatee)
 
@@ -39,7 +39,7 @@ ELSE()
         MESSAGE(FATAL_ERROR "Could not find Trilinos!")
 ENDIF()
 
-set(manatee_src src/data/Data.cc src/mesh/Finite_Element.cc src/mesh/Mesh.cc src/neutronics/Neutronics.cc src/parser/Parser.cc src/transport_model/SP1_Transport.cc src/transport_model/SPn_Transport.cc)
+set(manatee_src src/data/Data.cc src/mesh/Finite_Element.cc src/mesh/Mesh.cc src/neutronics/Neutronics.cc src/parser/Parser.cc src/transport_model/Gauss_Legendre.cc src/transport_model/Ordinates.cc src/transport_model/SP1_Transport.cc src/transport_model/SPn_Transport.cc)
 set(manatee_main src/manatee/Manatee.cc)
 set(manatee_test test/tst_Manatee.cc)
 

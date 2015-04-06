@@ -29,9 +29,11 @@ namespace transport_ns
     
     SP1_Transport::
     SP1_Transport(Data &data,
-                  Mesh &mesh):
+                  Mesh &mesh,
+                  string problem_type):
         data_(data),
-        mesh_(mesh)
+        mesh_(mesh),
+        problem_type_(problem_type)
     {
         data_.check();
         mesh_.check();
@@ -60,8 +62,8 @@ namespace transport_ns
         
         solver_->Solve();
         
-        solver_->PrintStatus();
-        
+        // solver_->PrintStatus();
+
         return 0;
     }
     
@@ -105,7 +107,7 @@ namespace transport_ns
                     }
                 }
             }
-            
+
             for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
             {
                 for (unsigned o1 = 0; o1 < mesh_.number_of_nodes(); ++o1)
@@ -123,7 +125,7 @@ namespace transport_ns
                     }
                 }
             }
-            
+                
             for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
             {
                 for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
@@ -143,7 +145,6 @@ namespace transport_ns
                     }
                 }
             }
-            
             if (i == 0)
             {
                 for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
@@ -360,8 +361,8 @@ namespace transport_ns
             cerr << "Specified solver \"" << solver_type_ << "\" is not available." << endl;
         }
         
-        list_.set("PrintTiming", true);
-        list_.set("PrintStatus", true);
+        // list_.set("PrintTiming", true);
+        // list_.set("PrintStatus", true);
         
         solver_->SetParameters(list_);
         

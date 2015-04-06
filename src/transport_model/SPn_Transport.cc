@@ -30,10 +30,12 @@ namespace transport_ns
     SPn_Transport::
     SPn_Transport(unsigned number_of_even_moments,
                   Data &data,
-                  Mesh &mesh):
+                  Mesh &mesh,
+                  string problem_type):
         number_of_even_moments_(number_of_even_moments),
         data_(data),
-        mesh_(mesh)
+        mesh_(mesh),
+        problem_type_(problem_type)
     {
         data_.check();
         mesh_.check();
@@ -66,7 +68,7 @@ namespace transport_ns
         solver_->NumericFactorization();
         
         solver_->Solve();
-        
+
         return 0;
     }
 

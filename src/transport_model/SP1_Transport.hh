@@ -19,6 +19,7 @@
 
 namespace transport_ns
 {
+    using std::string;
     using std::unique_ptr;
     using std::vector;
     using namespace data_ns;
@@ -35,6 +36,8 @@ namespace transport_ns
         
         Data &data_;
         Mesh &mesh_;
+
+        string problem_type_;
         
         vector<double> solution_;
         
@@ -70,17 +73,7 @@ namespace transport_ns
         int initialize_problem();
         int initialize_solver();
         int initialize_transport();
-        
-        inline int local_to_cell_edge(int local_index)
-        {
-            return my_global_elements_[local_index] % number_of_edges_;
-        }
-        
-        inline int local_to_moment(int local_index)
-        {
-            return my_global_elements_[local_index] / number_of_edges_;
-        }
-        
+
         inline double d(unsigned cell, unsigned from_group, unsigned to_group)
         {
             return d_[from_group + data_.number_of_groups() * (to_group + data_.number_of_groups() * cell)];
@@ -89,7 +82,8 @@ namespace transport_ns
     public:
         
         SP1_Transport(Data &data,
-                      Mesh &mesh);
+                      Mesh &mesh,
+                      string problem_type = "forward");
         
         int solve();
         
@@ -99,71 +93,22 @@ namespace transport_ns
             // std::cout << "MATRIX" << std::endl;
             // std::cout << *matrix_ << std::endl;
             
-            std::cout << "RHS" << std::endl;
-            std::cout << *rhs_ << std::endl;
+            // std::cout << "RHS" << std::endl;
+            // std::cout << *rhs_ << std::endl;
             
             std::cout << "LHS" << std::endl;
             std::cout << *lhs_ << std::endl;
-            
-            //plot_scalar_flux();
-        }
-        
-        void plot_scalar_flux()
-        {
-            unsigned lines = 20;
-            
-            if (number_of_edges_ < 500)
+
+            for (unsigned i = 0; i < number_of_edges_; ++i)
             {
-                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                for (unsigned g = 0; g < mesh_.number_of_cells(); ++g)
                 {
-                    std::cout << "Group " << g << " Normalized Scalar Flux ";
-                    
-                    vector<double> temp1(number_of_edges_, 0);
-                    
-                    double max = 0;
-                    for (unsigned i = 0; i < number_of_edges_; ++i)
-                    {
-                        unsigned k = 0 + i + number_of_edges_ * (g + 0);
-                        
-                        temp1[i] = (*lhs_)[k];
-                        
-                        if (temp1[i] > max)
-                        {
-                            max = temp1[i];
-                        }
-                    }
-                    
-                    std::cout << "(phi_max = " << max << ")" << std::endl;
-                    
-                    vector<unsigned> temp2(number_of_edges_,0);
-                    
-                    for (unsigned i = 0; i < number_of_edges_; ++i)
-                    {
-                        temp1[i] /= max;
-                        
-                        temp2[i] = std::ceil(temp1[i] * lines);
-                    }
-                    
-                    
-                    for (int l = lines; l >= 0; --l)
-                    {
-                        for (unsigned i = 0; i < number_of_edges_; ++i)
-                        {
-                            if (temp2[i] == l)
-                            {
-                                std::cout << ".";
-                            }
-                            else
-                            {
-                                std::cout << " ";
-                            }
-                        }
-                        std::cout << std::endl;
-                    }
-                    
-                    std::cout << std::endl;
+                    unsigned k = i + number_of_edges_ * g;
+
+                    std::cout << (*lhs_)[k] << std::endl;
                 }
             }
+
         }
     };
 }

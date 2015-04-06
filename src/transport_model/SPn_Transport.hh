@@ -36,6 +36,8 @@ namespace transport_ns
         
         Data &data_;
         Mesh &mesh_;
+
+        string problem_type_;
         
         vector<double> solution_;
         
@@ -95,7 +97,8 @@ namespace transport_ns
 
         SPn_Transport(unsigned number_of_even_moments,
                       Data &data,
-                      Mesh &mesh);
+                      Mesh &mesh,
+                      string problem_type = "forward");
 
         ~SPn_Transport();
         

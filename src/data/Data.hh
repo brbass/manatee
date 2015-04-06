@@ -70,7 +70,7 @@ namespace data_ns
             return sigma_t_[group + number_of_groups_ * cell];
         }
     
-        inline double sigma_s(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment)
+        inline double sigma_s(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment = 0)
         {
             return sigma_s_[from_group + number_of_groups_ * (to_group + number_of_groups_ * (cell + number_of_cells_ * moment))];
         }
