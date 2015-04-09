@@ -1,6 +1,6 @@
-#include "Neutronics.hh"
+#include "Transport_Model.hh"
 
-#include <iostring>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -12,16 +12,15 @@
 #include "SP1_Transport.hh"
 #include "SPn_Transport.hh"
 
-namespace neutronics_ns
+namespace transport_ns
 {
     using namespace std;
     using namespace data_ns;
     using namespace mesh_ns;
     using namespace parser_ns;
-    using namespace transport_ns;
     
-    Neutronics::
-    Neutronics(string &input_folder):
+    Transport_Model::
+    Transport_Model(string &input_folder):
         input_folder_(input_folder)
     {
         Parser parser(input_folder_);
@@ -42,31 +41,31 @@ namespace neutronics_ns
         
         parser.parse_data(boundary_conditions_, "boundary_conditions");
         
-        Neutronics(number_of_cells_,
-                   number_of_groups_,
-                   number_of_scattering_moments_,
-                   side_length_,
-                   internal_source_,
-                   boundary_sources_,
-                   sigma_t_,
-                   sigma_s_,
-                   nu_sigma_f_,
-                   chi_,
-                   boundary_conditions_);
+        Transport_Model(number_of_cells_,
+                        number_of_groups_,
+                        number_of_scattering_moments_,
+                        side_length_,
+                        internal_source_,
+                        boundary_sources_,
+                        sigma_t_,
+                        sigma_s_,
+                        nu_sigma_f_,
+                        chi_,
+                        boundary_conditions_);
     }
     
-    Neutronics::
-    Neutronics(unsigned &number_of_cells,
-               unsigned &number_of_groups,
-               unsigned &number_of_scattering_moments,
-               double &side_length,
-               vector<double> &internal_source,
-               vector<double> &boundary_sources,
-               vector<double> &sigma_t,
-               vector<double> &sigma_s,
-               vector<double> &nu_sigma_f,
-               vector<double> &chi,
-               vector<string> &boundary_conditions)
+    Transport_Model::
+    Transport_Model(unsigned &number_of_cells,
+                    unsigned &number_of_groups,
+                    unsigned &number_of_scattering_moments,
+                    double &side_length,
+                    vector<double> &internal_source,
+                    vector<double> &boundary_sources,
+                    vector<double> &sigma_t,
+                    vector<double> &sigma_s,
+                    vector<double> &nu_sigma_f,
+                    vector<double> &chi,
+                    vector<string> &boundary_conditions)
     {
         mesh_ = unique_ptr<Mesh> (new Mesh(number_of_cells,
                                            side_length));
@@ -91,22 +90,22 @@ namespace neutronics_ns
         sp1_transport_ = unique_ptr<SP1_Transport> (new SP1_Transport(*data_,
                                                                       *mesh_));
 
-        transport_type_ = "sn_transport";
+        transport_type_ = "sp1_transport";
     }
 
-    Neutronics::
-    Neutronics(unsigned &number_of_cells,
-               unsigned &number_of_groups,
-               unsigned &number_of_scattering_moments,
-               unsigned &number_of_ordinates,
-               double &side_length,
-               vector<double> &internal_source,
-               vector<double> &boundary_sources,
-               vector<double> &sigma_t,
-               vector<double> &sigma_s,
-               vector<double> &nu_sigma_f,
-               vector<double> &chi,
-               vector<string> &boundary_conditions)
+    Transport_Model::
+    Transport_Model(unsigned &number_of_cells,
+                    unsigned &number_of_groups,
+                    unsigned &number_of_scattering_moments,
+                    unsigned &number_of_ordinates,
+                    double &side_length,
+                    vector<double> &internal_source,
+                    vector<double> &boundary_sources,
+                    vector<double> &sigma_t,
+                    vector<double> &sigma_s,
+                    vector<double> &nu_sigma_f,
+                    vector<double> &chi,
+                    vector<string> &boundary_conditions)
     {
         mesh_ = unique_ptr<Mesh> (new Mesh(number_of_cells,
                                            side_length));
@@ -123,18 +122,17 @@ namespace neutronics_ns
                                            boundary_conditions));
         
         ordinates_ = unique_ptr<Ordinates> (new Ordinates(number_of_ordinates));
-
+        
         sn_transport_ = unique_ptr<Sn_Transport> (new Sn_Transport(*data_,
                                                                    *mesh_,
                                                                    *ordinates_));
-
+        
         transport_type_ = "sn_transport";
     }
     
-    void Neutronics::
+    void Transport_Model::
     solve()
     {
-        // spn_transport_->solve();
         if (transport_type_.compare("sn_transport") == 0)
         {
             sn_transport_->solve();
@@ -143,9 +141,13 @@ namespace neutronics_ns
         {
             sp1_transport_->solve();
         }
+        // else if (transport_type_compare("spn_transport") == 0)
+        // {
+        //     spn_transport_->solve();
+        // }
         else
         {
-            cerr << "transport type does not exist" << endl;
+            cerr << "transport type \"" << transport_type_ << "\" does not exist" << endl;
         }
     }
 }

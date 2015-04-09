@@ -3,13 +3,13 @@
 
 #include <mpi.h>
 
-#include "Neutronics.hh"
+#include "Transport_Model.hh"
 
 int main(int argc, char *argv[])
 {
     using namespace std;
-    using namespace neutronics_ns;
-
+    using namespace transport_ns;
+    
     if (argc != 2)
     {
         cout << "usage: manatee [input_folder]" << endl;
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     
     string input_folder = argv[1];
     
-    Neutronics neutronics(input_folder);
+    Transport_Model transport_model(input_folder);
 
     MPI_Finalize();
 }

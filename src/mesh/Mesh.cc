@@ -11,8 +11,10 @@ namespace mesh_ns
     
     Mesh::
     Mesh(unsigned &number_of_cells,
-         double &side_length):
-        number_of_cells_(number_of_cells)
+         double &side_length,
+         string geometry):
+        number_of_cells_(number_of_cells),
+        geometry_(geometry)
     {
         elements_.resize(0);
         

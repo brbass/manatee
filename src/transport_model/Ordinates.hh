@@ -17,6 +17,8 @@ namespace transport_ns
 
         vector<double> ordinates_;
         vector<double> weights_;
+        vector<double> alpha_;
+        vector<double> alpha_half_;
         
     public:
         
@@ -35,6 +37,16 @@ namespace transport_ns
         inline double weights(unsigned o)
         {
             return weights_[o];
+        }
+
+        inline double alpha(unsigned o)
+        {
+            return alpha_[o];
+        }
+
+        inline double alpha_half(unsigned o)
+        {
+            return alpha_half_[o];
         }
     };
 }

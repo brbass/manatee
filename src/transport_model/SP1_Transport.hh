@@ -1,6 +1,7 @@
 #ifndef SP1_Transport_hh
 #define SP1_Transport_hh
 
+#include <iomanip>
 #include <iostream>
 #include <cmath>
 #include <memory>
@@ -89,26 +90,37 @@ namespace transport_ns
         
         void print_scalar_flux()
         {
-            std::cout << "SP1_Transport" << std::endl;
-            // std::cout << "MATRIX" << std::endl;
-            // std::cout << *matrix_ << std::endl;
-            
-            // std::cout << "RHS" << std::endl;
-            // std::cout << *rhs_ << std::endl;
-            
-            std::cout << "LHS" << std::endl;
-            std::cout << *lhs_ << std::endl;
+            using namespace std;
 
-            for (unsigned i = 0; i < number_of_edges_; ++i)
+            const int w = 8;
+            
+            cout << "SP1_Transport" << endl;
+            // cout << "MATRIX" << endl;
+            // cout << *matrix_ << endl;
+            
+            // cout << "RHS" << endl;
+            // cout << *rhs_ << endl;
+            
+            // cout << "LHS" << endl;
+            // cout << *lhs_ << endl;
+
+            cout << left;
+            cout << setw(w) << "cell" << setw(w) << "node" << setw(w) << "group" << setw(w) << "phi" <<  endl;
+            
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                for (unsigned g = 0; g < mesh_.number_of_cells(); ++g)
+                for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
                 {
-                    unsigned k = i + number_of_edges_ * g;
-
-                    std::cout << (*lhs_)[k] << std::endl;
+                    for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                    {
+                        unsigned k = i + n + number_of_edges_ * g;
+                        
+                        cout << setw(w) << i << setw(w) << n << setw(w) << g << setw(w) << (*lhs_)[k] << endl;
+                    }
                 }
             }
 
+            cout << endl;
         }
     };
 }

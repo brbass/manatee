@@ -42,7 +42,7 @@ namespace data_ns
              vector<double> &chi,
              vector<string> &boundary_conditions);
 
-        void compute_d();
+        //void compute_d();
         int check();
         
         inline unsigned number_of_groups()
@@ -60,9 +60,9 @@ namespace data_ns
             return internal_source_[group + number_of_groups_ * cell];
         }
     
-        inline double boundary_source(unsigned boundary, unsigned group)
+        inline double boundary_source(unsigned boundary, unsigned group, unsigned ordinate = 0)
         {
-            return boundary_sources_[group + number_of_groups_ * boundary];
+            return boundary_sources_[group + number_of_groups_ * (boundary + 2 * ordinate)];
         }
         
         inline double sigma_t(unsigned cell, unsigned group)

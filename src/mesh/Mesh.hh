@@ -20,6 +20,7 @@ namespace mesh_ns
     
         unsigned number_of_cells_;
         unsigned number_of_nodes_ = 2;
+        string geometry_;
         
         vector<Finite_Element> elements_;
         
@@ -28,7 +29,8 @@ namespace mesh_ns
     public:
     
         Mesh(unsigned &number_of_cells,
-             double &side_length);
+             double &side_length,
+             string geometry = "slab");
 
         int check();
         
@@ -46,6 +48,11 @@ namespace mesh_ns
             return number_of_nodes_;
         }
         
+        inline double cell_center_position(unsigned cell)
+        {
+            return elements_[cell].cell_center_position();
+        }
+        
         inline double cell_length(unsigned cell)
         {
             return elements_[cell].cell_length();
@@ -54,6 +61,11 @@ namespace mesh_ns
         inline double stiffness(unsigned cell, unsigned kb, unsigned kw, unsigned kdb = 0, unsigned kdw = 0)
         {
             return elements_[cell].stiffness(kb, kw, kdb, kdw);
+        }
+        
+        inline bool geometry(string test)
+        {
+            return geometry_.compare(test) == 0;
         }
     };
 }

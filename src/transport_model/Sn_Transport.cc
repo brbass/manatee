@@ -7,6 +7,10 @@
 
 #include <mpi.h>
 
+#include <Epetra_SerialDenseMatrix.h>
+#include <Epetra_SerialDenseVector.h>
+#include <Epetra_SerialDenseSolver.h>
+
 #include "Data.hh"
 #include "Mesh.hh"
 #include "Ordinates.hh"
@@ -20,13 +24,11 @@ namespace transport_ns
     Sn_Transport::
     Sn_Transport(Data &data,
                  Mesh &mesh,
-                 Ordinates &ordinates,
-                 string problem_type)
+                 Ordinates &ordinates)
     :
         data_(data),
         mesh_(mesh),
-        ordinates_(ordinates),
-        problem_type_(problem_type)
+        ordinates_(ordinates)
     {
         data_.check();
         mesh_.check();
@@ -59,15 +61,15 @@ namespace transport_ns
     }
 
     void Sn_Transport::
-    lumped_linear_discontinuous_sweep(vector<double> &psi,
-                                      vector<double> &q)
+    slab_sweep(vector<double> &psi,
+               vector<double> &q)
     {
         vector<double> psi_boundary_sources(data_.number_of_groups() * ordinates_.number_of_ordinates(), 0);
     
         // boundary condition, x=0
-        if (boundary_conditions[0] == "reflected")
+        if (data_.boundary_condition(0).compare("reflected") == 0)
         {
-            for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
+            for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
             {
                 for (unsigned g = 0; g < data_.number_of_groups(); ++g)
                 {
@@ -78,9 +80,9 @@ namespace transport_ns
                 }
             }
         }
-        else if (boundary_conditions[0] == "vacuum")
+        else if (data_.boundary_condition(0).compare("vacuum") == 0)
         {
-            for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
+            for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
             {
                 for (unsigned g = 0; g < data_.number_of_groups(); ++g)
                 {
@@ -90,13 +92,18 @@ namespace transport_ns
                 }
             }
         }
+        else
+        {
+            cerr << "boundary condition \"" << data_.boundary_condition(0) << "\" not available" << endl;
+        }
         
         // sweep first cell
-        for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
+        for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
         {
             for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
                 unsigned i = 0;
+                unsigned k2 = g + data_.number_of_groups() * o;
                 unsigned k3 = mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
                 unsigned k4 = mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
 				
@@ -106,16 +113,16 @@ namespace transport_ns
                 double a4 = ordinates_.ordinates(o) / 2 + data_.sigma_t(i, g) * mesh_.cell_length(i) / 2;
                 double s1 = mesh_.cell_length(i) * (q[k3] / 2) + ordinates_.ordinates(o) * (data_.boundary_source(0, g, o) + psi_boundary_sources[k2]);
                 double s2 = mesh_.cell_length(i) * (q[k3+1] / 2);
-				
+
                 psi[k4] = (a4 * s1 - a2 * s2) / (a1 * a4 - a2 * a3);
                 psi[k4+1] = (a3 * s1 - a1 * s2) / (a2 * a3 - a1 * a4);
             }
         }
-
+        
         // sweep right over cells
         for (unsigned i = 1; i < mesh_.number_of_cells(); ++i)
-        {
-            for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
+        { 
+            for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
             {
                 for (unsigned g = 0; g < data_.number_of_groups(); ++g)
                 {
@@ -137,9 +144,9 @@ namespace transport_ns
         }
 
         // boundary condition, x=X
-        if (boundary_conditions[1] == "reflected")
+        if (data_.boundary_condition(1).compare("reflected") == 0)
         {
-            for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
+            for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
             {
                 for (unsigned g = 0; g < data_.number_of_groups(); ++g)
                 {
@@ -150,9 +157,9 @@ namespace transport_ns
                 }
             }
         }
-        else if (boundary_conditions[1] == "vacuum")
+        else if (data_.boundary_condition(1).compare("vacuum") == 0)
         {
-            for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
+            for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
             {
                 for (unsigned g = 0; g < data_.number_of_groups(); ++g)
                 {
@@ -162,14 +169,18 @@ namespace transport_ns
                 }
             }
         }
-
-
+        else
+        {
+            cerr << "boundary condition \"" << data_.boundary_condition(1) << "\" not available" << endl;
+        }
+        
         // sweep final cell
-        for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
+        for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
         {
             for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
                 unsigned i = mesh_.number_of_cells() - 1;
+                unsigned k2 = g + data_.number_of_groups() * o;
                 unsigned k3 = mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
                 unsigned k4 = mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
 				
@@ -179,7 +190,7 @@ namespace transport_ns
                 double a4 = -ordinates_.ordinates(o) / 2 + data_.sigma_t(i, g) * mesh_.cell_length(i) / 2;
                 double s1 = mesh_.cell_length(i) * (q[k3] / 2);
                 double s2 = mesh_.cell_length(i) * (q[k3+1] / 2) - ordinates_.ordinates(o) * (data_.boundary_source(1, g, o) + psi_boundary_sources[k2]);
-				
+                
                 psi[k4] = (a4 * s1 - a2 * s2) / (a1 * a4 - a2 * a3);
                 psi[k4+1] = (a3 * s1 - a1 * s2) / (a2 * a3 - a1 * a4);		
             }
@@ -188,7 +199,7 @@ namespace transport_ns
         // sweep left over cells
         for (int i = mesh_.number_of_cells() - 2; i >= 0; --i)
         {
-            for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
+            for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
             {
                 for (unsigned g = 0; g < data_.number_of_groups(); ++g)
                 {
@@ -210,6 +221,114 @@ namespace transport_ns
         }
     }
 
+    void Sn_Transport::
+    spherical_sweep(vector<double> &psi,
+                    vector<double> &q)
+    {
+        vector<double> psi_boundary_sources(data_.number_of_groups() * ordinates_.number_of_ordinates(), 0);
+        vector<double> psi_half(mesh_.number_of_nodes() * data_.number_of_groups() * mesh_.number_of_cells());
+        
+        Epetra_SerialDenseMatrix matrix (mesh_.number_of_nodes(), mesh_.number_of_nodes());
+        Epetra_SerialDenseVector lhs (mesh_.number_of_nodes());
+        Epetra_SerialDenseVector rhs (mesh_.number_of_nodes());
+        Epetra_SerialDenseSolver solver;
+        solver.SetMatrix(matrix);
+        solver.SetVectors(lhs, rhs);
+        
+        // boundary condition, r=R
+        if (data_.boundary_condition(1).compare("reflected") == 0)
+        {
+            for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
+            {
+                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                {
+                    unsigned k1 = g + data_.number_of_groups() * o;
+                    unsigned k2 = 1 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * ((ordinates_.number_of_ordinates() - 1 - o) + ordinates_.number_of_ordinates() * (mesh_.number_of_cells() - 1)));
+                    
+                    psi_boundary_sources[k1] = psi[k2];
+                }
+            }
+        }
+        else
+        {
+            cerr << "boundary condition \"" << data_.boundary_condition(1) << "\" not available" << endl;
+        }
+
+        // special inward direction
+        for (int i = mesh_.number_of_cells() - 1; i >= 0; --i)
+        {
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                for (unsigned n1 = 0; n1 < mesh_.number_of_nodes(); ++n1)
+                {
+                    double sum = 0;
+                    
+                    for (unsigned n2 = 0; n2 < mesh_.number_of_nodes(); ++n2)
+                    {
+                        matrix(n1, n2) = 2.0 / mesh_.cell_length(i) * get_k_spec(n1, n2) + data_.sigma_t(i, g) * get_m_spec(n1, n2);
+                        
+                        sum += get_m_spec(n1, n2) * q[mesh_.number_of_nodes() * (g + data_.number_of_groups() * i)];
+                    }
+                    
+                    rhs(n1) = sum;
+                }
+
+                matrix(0, 0) += 2.0 / mesh_.cell_length(i);
+
+                if (i < mesh_.number_of_cells() - 1)
+                {
+                    rhs(1) += 2.0 / mesh_.cell_length(i) * psi_half[mesh_.number_of_nodes() * (g + data_.number_of_groups() * (i + 1))];
+                }
+                
+                solver.SetMatrix(matrix);
+                solver.SetVectors(lhs, rhs);
+                solver.Solve();
+                
+                for (unsigned o = 0; o < mesh_.number_of_nodes(); ++o)
+                {
+                    psi_half[o + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i)] = lhs[o];
+                }
+            }
+        }
+        
+        // sweep inward
+        for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
+        {
+            for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+            { 
+                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                {
+                    
+                }
+            }
+        }
+
+        
+        // boundary condition, r=0
+        if (data_.boundary_condition(0).compare("reflected") == 0)
+        {
+            for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
+            {
+                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                {
+                    unsigned k1 = g + data_.number_of_groups() * o;
+                    unsigned k2 = 0 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * ((ordinates_.number_of_ordinates() - 1 - o) + ordinates_.number_of_ordinates() * 0));
+                    
+                    psi_boundary_sources[k1] = psi[k2];
+                }
+            }
+        }
+        else
+        {
+            cerr << "boundary condition \"" << data_.boundary_condition(0) << "\" not available" << endl;
+        }
+        
+        // sweep outward
+        
+        
+        solver.Solve();
+    }
+    
     void Sn_Transport::
     psi_to_phi(vector<double> &phi,
                vector<double> &psi)
@@ -235,7 +354,7 @@ namespace transport_ns
             }
         }
     }
-
+    
     void Sn_Transport::
     check_convergence(bool &converged,
                       vector<double> &phi,
@@ -255,7 +374,7 @@ namespace transport_ns
                 {
                     unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
                     
-                    error_phi[k1] = abs(phi[k1] - phi_old[k1]) / phi[k1];
+                    error_phi[k1] = abs((phi[k1] - phi_old[k1]) / phi[k1]);
                     
                     if (error_phi[k1] > tolerance_ * (1 - error_phi[k1] / error_phi_old[k1]))
                     {
@@ -270,47 +389,100 @@ namespace transport_ns
     solve()
     {
         using namespace std;
-        
-        // temporary variables
-        vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates());
-        vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux
-        vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
-        vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
-        vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
-        vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
-        bool converged = false;
-    
-        // begin iterations
-        for (unsigned it = 0; it < max_iterations_; ++it)
+
+        if (mesh_.geometry("slab"))
         {
-            calculate_source(q,
-                             phi);
-        
-            lumped_linear_discontinuous_sweep(psi,
-                                              q);
-            
-            phi_old = phi;
-            psi_to_phi(phi,
-                       psi);
-            check_convergence(converged,
-                              phi,
-                              phi_old,
-                              error_phi,
-                              error_phi_old);
-            
-            if (converged)
+            // temporary variables
+            vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
+            vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
+            vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
+            vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
+            vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            bool converged = false;
+
+            // begin iterations
+            for (unsigned it = 0; it < max_iterations_; ++it)
             {
-                iterations_ = it + 1;
-                phi_ = phi;
-                break;
+                calculate_source(q,
+                                 phi);
+
+                slab_sweep(psi,
+                           q);
+
+                phi_old = phi;
+            
+                psi_to_phi(phi,
+                           psi);
+
+                check_convergence(converged,
+                                  phi,
+                                  phi_old,
+                                  error_phi,
+                                  error_phi_old);
+
+                if (converged)
+                {
+                    iterations_ = it + 1;
+                    phi_ = phi;
+                    break;
+                }
+                else if (it==max_iterations_ - 1)
+                {
+                    iterations_ = it + 1;
+                    phi_ = phi;
+                }
             }
-            else if (it==max_iterations_ - 1)
-            {
-                iterations = it + 1;
-            }
+            // calculate_leakage(psi,
+            //                   leakage);
         }
-        // calculate_leakage(psi,
-        //                   leakage);
+        else if (mesh_.geometry("spherical"))
+        {
+            // temporary variables
+            vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
+            vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
+            vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
+            vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
+            vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            
+            bool converged = false;
+            
+            // begin iterations
+            for (unsigned it = 0; it < max_iterations_; ++it)
+            {
+                calculate_source(q,
+                                 phi);
+                
+                spherical_sweep(psi,
+                                q);
+                
+                phi_old = phi;
+                
+                psi_to_phi(phi,
+                           psi);
+                
+                check_convergence(converged,
+                                  phi,
+                                  phi_old,
+                                  error_phi,
+                                  error_phi_old);
+                
+                if (converged)
+                {
+                    iterations_ = it + 1;
+                    phi_ = phi;
+                    break;
+                }
+                else if (it==max_iterations_ - 1)
+                {
+                    iterations_ = it + 1;
+                    phi_ = phi;
+                }
+            }
+            // calculate_leakage(psi,
+            //                   leakage);
+        }
     }
 
     void Sn_Transport::
@@ -322,16 +494,16 @@ namespace transport_ns
 
         leakage.assign(leakage.size(), 0.0);
         
-        for (unsigned op = 0; op < ordinates_.number_of_ordinates() / 2; ++op)
+        for (unsigned on = 0; on < ordinates_.number_of_ordinates() / 2; ++on)
         {
-            unsigned on = ordinates_.number_of_ordinates() - op - 1;
+            unsigned op = ordinates_.number_of_ordinates() - on - 1;
             for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                unsigned kl = 0 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (on + ordinates_.number_of_ordinates() * il));
-                unsigned kr = 1 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (op + ordinates_.number_of_ordinates() * ir));
+                unsigned kl = 0 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (op + ordinates_.number_of_ordinates() * il));
+                unsigned kr = 1 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (on + ordinates_.number_of_ordinates() * ir));
                 
-                leakage[0] += ordinates_.ordinates(on) * ordinates_.weights(on) * psi[kl];
-                leakage[1] += ordinates_.ordinates(op) * ordinates_.weights(op) * psi[kr];
+                leakage[0] += ordinates_.ordinates(op) * ordinates_.weights(op) * psi[kl];
+                leakage[1] += ordinates_.ordinates(on) * ordinates_.weights(on) * psi[kr];
             }
         }
     }
