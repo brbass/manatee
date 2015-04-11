@@ -245,9 +245,22 @@ namespace transport_ns
                     unsigned k1 = g + data_.number_of_groups() * o;
                     unsigned k2 = 1 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * ((ordinates_.number_of_ordinates() - 1 - o) + ordinates_.number_of_ordinates() * (mesh_.number_of_cells() - 1)));
                     
-                    psi_boundary_sources[k1] = psi[k2];
+                    psi_boundary_sources[k1] = psi[k2] + data_.boundary_source(1, g, o);
                 }
             }
+        }
+        else if (data_.boundary_condition(1).compare("vacuum") == 0)
+        {
+            for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
+            {
+                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                {
+                    unsigned k = g + data_.number_of_groups() * o;
+                    
+                    psi_boundary_sources[k] = data_.boundary_source(1, g, o);
+                }
+            }
+
         }
         else
         {
@@ -266,27 +279,33 @@ namespace transport_ns
                     for (unsigned n2 = 0; n2 < mesh_.number_of_nodes(); ++n2)
                     {
                         matrix(n1, n2) = 2.0 / mesh_.cell_length(i) * get_k_spec(n1, n2) + data_.sigma_t(i, g) * get_m_spec(n1, n2);
+
+                        unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
                         
-                        sum += get_m_spec(n1, n2) * q[mesh_.number_of_nodes() * (g + data_.number_of_groups() * i)];
+                        sum += get_m_spec(n1, n2) * q[k];
                     }
                     
                     rhs(n1) = sum;
                 }
-
+                
                 matrix(0, 0) += 2.0 / mesh_.cell_length(i);
 
                 if (i < mesh_.number_of_cells() - 1)
                 {
-                    rhs(1) += 2.0 / mesh_.cell_length(i) * psi_half[mesh_.number_of_nodes() * (g + data_.number_of_groups() * (i + 1))];
+                    unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * (i + 1));
+                    
+                    rhs(1) += 2.0 / mesh_.cell_length(i) * psi_half[k];
                 }
                 
                 solver.SetMatrix(matrix);
                 solver.SetVectors(lhs, rhs);
                 solver.Solve();
                 
-                for (unsigned o = 0; o < mesh_.number_of_nodes(); ++o)
+                for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
                 {
-                    psi_half[o + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i)] = lhs[o];
+                    unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                    
+                    psi_half[k] = lhs[n];
                 }
             }
         }
@@ -298,11 +317,55 @@ namespace transport_ns
             { 
                 for (unsigned g = 0; g < data_.number_of_groups(); ++g)
                 {
+                    for (unsigned n1 = 0; n1 < mesh_.number_of_nodes(); ++n1)
+                    {
+                        double sum1 = 0;
+                        double sum2 = 0;
+                        
+                        for (unsigned n2 = 0; n2 < mesh_.number_of_nodes(); ++n2)
+                        {
+                            matrix(n1, n2) = - 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * get_k(i, n1, n2) + 4 * ordinates_.alpha_half(o) / ordinates_.weights(o) * get_l(i, n1, n2) + data_.sigma_t(i, g) * get_m(i, n1, n2);
+
+                            unsigned k1 = n2 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                            unsigned k2 = n2 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                            
+                            sum1 += get_l(i, n1, n2) * psi_half[k1];
+                            sum2 += get_m(i, n1, n2) * q[k2] / 2; // isotropic internal source
+                        }
+
+                        rhs(n1) = 2 * ordinates_.alpha(o) / ordinates_.weights(o) * sum1 + sum2;
+                    }
                     
+                    matrix(0, 0) -= 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * mesh_.cell_edge_position(i, 0);
+                    
+                    if (i < mesh_.number_of_cells() - 1)
+                    {
+                        unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * (i + 1));
+                        
+                        rhs(1) -= 2 * ordinates_.ordinates(o) / mesh_.cell_edge_position(i, 1) * psi[k];
+                    }
+                    else
+                    {
+                        unsigned k = g + data_.number_of_groups() * o;
+                        
+                        rhs(1) -= 2 * ordinates_.ordinates(o) / mesh_.cell_edge_position(i, 1) * psi_boundary_sources[k];
+                    }
+                    
+                    solver.SetMatrix(matrix);
+                    solver.SetVectors(lhs, rhs);
+                    solver.Solve();
+                    
+                    for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                    {
+                        unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
+                        
+                        psi[k] = lhs[n];
+                    }
                 }
             }
+            
+            update_psi_half(psi_half, psi, o);
         }
-
         
         // boundary condition, r=0
         if (data_.boundary_condition(0).compare("reflected") == 0)
@@ -327,6 +390,26 @@ namespace transport_ns
         
         
         solver.Solve();
+    }
+
+    void Sn_Transport::
+    update_psi_half(vector<double> &psi_half,
+                    vector<double> &psi,
+                    unsigned o)
+    {
+        for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+        {
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                {
+                    unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                    unsigned k2 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
+                    
+                    psi_half[k1] = 2 * psi[k2] - psi_half[k1];
+                }
+            }
+        }
     }
     
     void Sn_Transport::

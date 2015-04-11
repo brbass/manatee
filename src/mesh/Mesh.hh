@@ -52,6 +52,11 @@ namespace mesh_ns
         {
             return elements_[cell].cell_center_position();
         }
+
+        inline double cell_edge_position(unsigned cell, unsigned edge)
+        {
+            return elements_[cell].cell_edge_position(edge);
+        }
         
         inline double cell_length(unsigned cell)
         {

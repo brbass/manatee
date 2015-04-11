@@ -49,15 +49,15 @@ namespace transport_ns
         Mesh &mesh_;
         Ordinates &ordinates_;
         
-        unsigned max_iterations_ = 1000;
+        unsigned max_iterations_ = 5;
         double tolerance_ = 1e-8;
         
         double iterations_;
         vector<double> phi_;
 
-        double get_k_spec(unsigned o1, unsigned o2)
+        double get_k_spec(unsigned n1, unsigned n2)
         {
-            unsigned o = o2 + mesh_.number_of_nodes() * o1;
+            unsigned o = n2 + mesh_.number_of_nodes() * n1;
             
             switch(o)
             {
@@ -75,9 +75,9 @@ namespace transport_ns
             }
         }
 
-        double get_m_spec(unsigned o1, unsigned o2)
+        double get_m_spec(unsigned n1, unsigned n2)
         {
-            unsigned o = o2 + mesh_.number_of_nodes() * o1;
+            unsigned o = n2 + mesh_.number_of_nodes() * n1;
             
             switch(o)
             {
@@ -95,9 +95,9 @@ namespace transport_ns
             }
         }
 
-        double get_k(unsigned i, unsigned o1, unsigned o2)
+        double get_k(unsigned i, unsigned n1, unsigned n2)
         {
-            unsigned o = o2 + mesh_.number_of_nodes() * o1;
+            unsigned o = n2 + mesh_.number_of_nodes() * n1;
             
             switch(o)
             {
@@ -115,9 +115,9 @@ namespace transport_ns
             }
         }
 
-        double get_l(unsigned i, unsigned o1, unsigned o2)
+        double get_l(unsigned i, unsigned n1, unsigned n2)
         {
-            unsigned o = o2 + mesh_.number_of_nodes() * o1;
+            unsigned o = n2 + mesh_.number_of_nodes() * n1;
             
             switch(o)
             {
@@ -135,9 +135,9 @@ namespace transport_ns
             }
         }
 
-        double get_m(unsigned i, unsigned o1, unsigned o2)
+        double get_m(unsigned i, unsigned n1, unsigned n2)
         {
-            unsigned o = o2 + mesh_.number_of_nodes() * o1;
+            unsigned o = n2 + mesh_.number_of_nodes() * n1;
             
             switch(o)
             {
@@ -154,6 +154,42 @@ namespace transport_ns
                 return 0;
             }
         }
+
+        double a_pos(unsigned i, unsigned g, unsigned o, unsigned n1, unsigned n2)
+        {
+            double val = - 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * get_k(i, n1, n2) + 4 * ordinates_.alpha_half(o) / ordinates_.weights(o) * get_l(i, n1, n2) + data_.sigma_t(i, g) * get_m(i, n1, n2);
+            
+            if (n1 == 1 && n2 == 1)
+            {
+                val += 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_cell_edge_position(i, 1), 2);
+            }
+            
+            return val;
+        }
+
+        double a_neg(unsigned i, unsigned g, unsigned o, unsigned n1, unsigned n2)
+        {
+            double val = - 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * get_k(i, n1, n2) + 4 * ordinates_.alpha_half(o) / ordinates_.weights(o) * get_l(i, n1, n2) + data_.sigma_t(i, g) * get_m(i, n1, n2);
+            
+            if (n1 == 0 && n2 == 0)
+            {
+                val -= 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_cell_edge_position(i, 1), 2);
+            }
+            
+            return val;
+        }
+
+        double a_spec(unsigned i, unsigned g, unsigned n1, unsigned n2)
+        {
+            double val = 2 / mesh_.cell_length(i) * get_k_spec(i, n1, n2) + data_.sigma_t(i, g) * get_m_spec(i, n1, n2);
+            
+            if (n1 == 0 && n2 == 0)
+            {
+                val += 2 / mesh_.cell_length(i);
+            }
+            
+            return val;
+        }
         
     public:
         
@@ -165,6 +201,10 @@ namespace transport_ns
 
         void psi_to_phi(vector<double> &phi,
                         vector<double> &psi);
+
+        void update_psi_half(vector<double> &psi_half,
+                             vector<double> &psi,
+                             unsigned o);
         
         void print_scalar_flux()
         {

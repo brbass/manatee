@@ -35,6 +35,20 @@ namespace mesh_ns
             return cell_length_;
         }
 
+        inline double cell_edge_position(unsigned edge)
+        {
+            switch(edge)
+            {
+            case 0:
+                return cell_center_position_ - cell_length_ / 2;
+            case 1:
+                return cell_center_position_ + cell_length_ / 2;
+            default:
+                std::cerr << "edge not available" << std::endl;
+                return 0;
+            }
+        }
+        
         inline double stiffness(unsigned kb, unsigned kw, unsigned kdb = 0, unsigned kdw = 0)
         {
             // kb: which basis function
