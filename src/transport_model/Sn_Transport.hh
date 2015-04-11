@@ -7,6 +7,10 @@
 #include <string>
 #include <vector>
 
+#include <Epetra_SerialDenseMatrix.h>
+#include <Epetra_SerialDenseVector.h>
+#include <Epetra_SerialDenseSolver.h>
+
 #include "Data.hh"
 #include "Mesh.hh"
 #include "Ordinates.hh"
@@ -23,8 +27,6 @@ namespace transport_ns
     {
     private:
 
-        // vector operators
-    
         void calculate_leakage(vector<double> &psi,
                                vector<double> &leakage);
 
@@ -36,21 +38,34 @@ namespace transport_ns
 
         void spherical_sweep(vector<double> &psi,
                              vector<double> &q);
-    
+
+        void sweep_special(vector<double> &psi_half,
+                           vector<double> &q);
+
+        void sweep_inward(vector<double> &psi,
+                          vector<double> &psi_half,
+                          vector<double> &q,
+                          vector<double> &psi_boundary_sources);
+
+        void sweep_outward(vector<double> &psi,
+                           vector<double> &psi_half,
+                           vector<double> &q,
+                           vector<double> &psi_boundary_sources);
+
         void check_convergence(bool &converged,
                                vector<double> &phi,
                                vector<double> &phi_old,
                                vector<double> &error_phi,
                                vector<double> &error_phi_old);
-    
-        // data
+
+        void epetra_solve(Epetra_SerialDenseMatrix &matrix, Epetra_SerialDenseVector &lhs, Epetra_SerialDenseVector &rhs);        
         
         Data &data_;
         Mesh &mesh_;
         Ordinates &ordinates_;
         
-        unsigned max_iterations_ = 5;
-        double tolerance_ = 1e-8;
+        unsigned max_iterations_ = 2;
+        double tolerance_ = 1e-10;
         
         double iterations_;
         vector<double> phi_;
@@ -137,9 +152,9 @@ namespace transport_ns
 
         double get_m(unsigned i, unsigned n1, unsigned n2)
         {
-            unsigned o = n2 + mesh_.number_of_nodes() * n1;
+            unsigned n = n2 + mesh_.number_of_nodes() * n1;
             
-            switch(o)
+            switch(n)
             {
             case 0:
                 return pow(mesh_.cell_center_position(i), 2) * 2.0 / 3.0 - mesh_.cell_center_position(i) * mesh_.cell_length(i) / 3.0 + pow(mesh_.cell_length(i), 2) / 15.0;
@@ -161,27 +176,27 @@ namespace transport_ns
             
             if (n1 == 1 && n2 == 1)
             {
-                val += 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_cell_edge_position(i, 1), 2);
+                val += 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_.cell_edge_position(i, 1), 2);
             }
             
             return val;
         }
-
+        
         double a_neg(unsigned i, unsigned g, unsigned o, unsigned n1, unsigned n2)
         {
             double val = - 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * get_k(i, n1, n2) + 4 * ordinates_.alpha_half(o) / ordinates_.weights(o) * get_l(i, n1, n2) + data_.sigma_t(i, g) * get_m(i, n1, n2);
             
             if (n1 == 0 && n2 == 0)
             {
-                val -= 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_cell_edge_position(i, 1), 2);
+                val -= 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_.cell_edge_position(i, 0), 2);
             }
             
             return val;
         }
-
+        
         double a_spec(unsigned i, unsigned g, unsigned n1, unsigned n2)
         {
-            double val = 2 / mesh_.cell_length(i) * get_k_spec(i, n1, n2) + data_.sigma_t(i, g) * get_m_spec(i, n1, n2);
+            double val = 2 / mesh_.cell_length(i) * get_k_spec(n1, n2) + data_.sigma_t(i, g) * get_m_spec(n1, n2);
             
             if (n1 == 0 && n2 == 0)
             {
@@ -198,7 +213,7 @@ namespace transport_ns
                      Ordinates &ordinates);
         
         void solve();
-
+        
         void psi_to_phi(vector<double> &phi,
                         vector<double> &psi);
 
@@ -225,6 +240,35 @@ namespace transport_ns
                         unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
                         
                         cout << setw(w) << i << setw(w) << n << setw(w) << g << setw(w) << phi_[k] << endl;
+                    }
+                }
+            }
+
+            cout << "it: " << iterations_ << endl << endl;
+        }
+
+        void print_angular_flux(vector<double> &psi)
+        {
+            using namespace std;
+
+            const int w = 10;
+            
+            cout << "Sn_Transport" << endl;
+
+            cout << left;
+            cout << setw(w) <<  "cell" << setw(w) << "node" << setw(w) << "group" << setw(w) << "ordinate" << setw(w) << "phi" << endl;
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+                {
+                    for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                    {
+                        for (unsigned o = 0; o < ordinates_.number_of_ordinates(); ++o)
+                        {
+                            unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
+                            
+                            cout << setw(w) << i << setw(w) << n << setw(w) << g << setw(w) << o << setw(w) << psi[k] << endl;
+                        }
                     }
                 }
             }

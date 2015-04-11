@@ -228,13 +228,6 @@ namespace transport_ns
         vector<double> psi_boundary_sources(data_.number_of_groups() * ordinates_.number_of_ordinates(), 0);
         vector<double> psi_half(mesh_.number_of_nodes() * data_.number_of_groups() * mesh_.number_of_cells());
         
-        Epetra_SerialDenseMatrix matrix (mesh_.number_of_nodes(), mesh_.number_of_nodes());
-        Epetra_SerialDenseVector lhs (mesh_.number_of_nodes());
-        Epetra_SerialDenseVector rhs (mesh_.number_of_nodes());
-        Epetra_SerialDenseSolver solver;
-        solver.SetMatrix(matrix);
-        solver.SetVectors(lhs, rhs);
-        
         // boundary condition, r=R
         if (data_.boundary_condition(1).compare("reflected") == 0)
         {
@@ -267,105 +260,11 @@ namespace transport_ns
             cerr << "boundary condition \"" << data_.boundary_condition(1) << "\" not available" << endl;
         }
 
-        // special inward direction
-        for (int i = mesh_.number_of_cells() - 1; i >= 0; --i)
-        {
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-            {
-                for (unsigned n1 = 0; n1 < mesh_.number_of_nodes(); ++n1)
-                {
-                    double sum = 0;
-                    
-                    for (unsigned n2 = 0; n2 < mesh_.number_of_nodes(); ++n2)
-                    {
-                        matrix(n1, n2) = 2.0 / mesh_.cell_length(i) * get_k_spec(n1, n2) + data_.sigma_t(i, g) * get_m_spec(n1, n2);
-
-                        unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
-                        
-                        sum += get_m_spec(n1, n2) * q[k];
-                    }
-                    
-                    rhs(n1) = sum;
-                }
-                
-                matrix(0, 0) += 2.0 / mesh_.cell_length(i);
-
-                if (i < mesh_.number_of_cells() - 1)
-                {
-                    unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * (i + 1));
-                    
-                    rhs(1) += 2.0 / mesh_.cell_length(i) * psi_half[k];
-                }
-                
-                solver.SetMatrix(matrix);
-                solver.SetVectors(lhs, rhs);
-                solver.Solve();
-                
-                for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
-                {
-                    unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
-                    
-                    psi_half[k] = lhs[n];
-                }
-            }
-        }
-        
         // sweep inward
-        for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
-        {
-            for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
-            { 
-                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-                {
-                    for (unsigned n1 = 0; n1 < mesh_.number_of_nodes(); ++n1)
-                    {
-                        double sum1 = 0;
-                        double sum2 = 0;
-                        
-                        for (unsigned n2 = 0; n2 < mesh_.number_of_nodes(); ++n2)
-                        {
-                            matrix(n1, n2) = - 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * get_k(i, n1, n2) + 4 * ordinates_.alpha_half(o) / ordinates_.weights(o) * get_l(i, n1, n2) + data_.sigma_t(i, g) * get_m(i, n1, n2);
-
-                            unsigned k1 = n2 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
-                            unsigned k2 = n2 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
-                            
-                            sum1 += get_l(i, n1, n2) * psi_half[k1];
-                            sum2 += get_m(i, n1, n2) * q[k2] / 2; // isotropic internal source
-                        }
-
-                        rhs(n1) = 2 * ordinates_.alpha(o) / ordinates_.weights(o) * sum1 + sum2;
-                    }
-                    
-                    matrix(0, 0) -= 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * mesh_.cell_edge_position(i, 0);
-                    
-                    if (i < mesh_.number_of_cells() - 1)
-                    {
-                        unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * (i + 1));
-                        
-                        rhs(1) -= 2 * ordinates_.ordinates(o) / mesh_.cell_edge_position(i, 1) * psi[k];
-                    }
-                    else
-                    {
-                        unsigned k = g + data_.number_of_groups() * o;
-                        
-                        rhs(1) -= 2 * ordinates_.ordinates(o) / mesh_.cell_edge_position(i, 1) * psi_boundary_sources[k];
-                    }
-                    
-                    solver.SetMatrix(matrix);
-                    solver.SetVectors(lhs, rhs);
-                    solver.Solve();
-                    
-                    for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
-                    {
-                        unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
-                        
-                        psi[k] = lhs[n];
-                    }
-                }
-            }
-            
-            update_psi_half(psi_half, psi, o);
-        }
+        
+        sweep_special(psi_half, q);
+        
+        sweep_inward(psi, psi_half, psi_boundary_sources, q);
         
         // boundary condition, r=0
         if (data_.boundary_condition(0).compare("reflected") == 0)
@@ -388,10 +287,206 @@ namespace transport_ns
         
         // sweep outward
         
-        
-        solver.Solve();
+        sweep_outward(psi, psi_half, psi_boundary_sources, q);
     }
 
+    void Sn_Transport::
+    sweep_special(vector<double> &psi_half, vector<double> &q)
+    {
+        for (int i = mesh_.number_of_cells() - 1; i >= 0; --i)
+        {
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                Epetra_SerialDenseMatrix matrix (mesh_.number_of_nodes(), mesh_.number_of_nodes());
+                Epetra_SerialDenseVector lhs (mesh_.number_of_nodes());
+                Epetra_SerialDenseVector rhs (mesh_.number_of_nodes());
+        
+                for (unsigned n1 = 0; n1 < mesh_.number_of_nodes(); ++n1)
+                {
+                    double sum = 0;
+                    
+                    for (unsigned n2 = 0; n2 < mesh_.number_of_nodes(); ++n2)
+                    {
+                        matrix(n1, n2) = a_spec(i, g, n1, n2);
+                        
+                        unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                        
+                        sum += get_m_spec(n1, n2) * q[k] / 2;
+                    }
+                    
+                    rhs(n1) = sum;
+                }
+                
+                if (i < mesh_.number_of_cells() - 1)
+                {
+                    unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * (i + 1));
+                    
+                    rhs(1) += 2.0 / mesh_.cell_length(i) * psi_half[k];
+                }
+                
+                epetra_solve(matrix, lhs, rhs);
+                
+                for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                {
+                    unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                    
+                    psi_half[k] = lhs[n];
+                }
+
+                // cout << "************************************************" << endl;
+                // cout << "special, i:" << i << " g:" << g << endl;
+                // cout << lhs << endl;
+            }
+        }
+    }
+    
+    void Sn_Transport::
+    sweep_inward(vector<double> &psi, vector<double> &psi_half, vector<double> &psi_boundary_sources, vector<double> &q)
+    {
+        for (unsigned o = 0; o < ordinates_.number_of_ordinates() / 2; ++o)
+        {
+            for (int i = mesh_.number_of_cells() - 1; i >= 0; --i)
+            { 
+                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                {
+                    Epetra_SerialDenseMatrix matrix (mesh_.number_of_nodes(), mesh_.number_of_nodes());
+                    Epetra_SerialDenseVector lhs (mesh_.number_of_nodes());
+                    Epetra_SerialDenseVector rhs (mesh_.number_of_nodes());
+        
+                    for (unsigned n1 = 0; n1 < mesh_.number_of_nodes(); ++n1)
+                    {
+                        double sum1 = 0;
+                        double sum2 = 0;
+                        
+                        for (unsigned n2 = 0; n2 < mesh_.number_of_nodes(); ++n2)
+                        {
+                            matrix(n1, n2) = a_neg(i, g, o, n1, n2);
+
+                            unsigned k1 = n2 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                            unsigned k2 = n2 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+
+                            sum1 += get_l(i, n1, n2) * psi_half[k1];
+                            sum2 += get_m(i, n1, n2) * q[k2] / 2; // isotropic internal source
+                        }
+
+                        rhs(n1) = 2 * ordinates_.alpha(o) / ordinates_.weights(o) * sum1 + sum2;
+                    }
+                    
+                    if (i < mesh_.number_of_cells() - 1)
+                    {
+                        unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * (i + 1));
+                        
+                        rhs(1) -= 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_.cell_edge_position(i, 1), 2) * psi[k];
+                    }
+                    else
+                    {
+                        unsigned k = g + data_.number_of_groups() * o;
+                        
+                        rhs(1) -= 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_.cell_edge_position(i, 1), 2) * psi_boundary_sources[k];
+                    }
+        
+                    epetra_solve(matrix, lhs, rhs);
+
+                    for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                    {
+                        unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
+                        
+                        psi[k] = lhs[n];
+                    }
+
+                    // if (i==1 && o==0)
+                    // {
+                    //     cout << "************************************************" << endl;
+                    //     cout << "inward, i:" << i << " o:" << o << " g:" << g << endl << endl;
+
+                    // cout << "mu_m=" << ordinates_.ordinates(o) << " dri=" << mesh_.cell_length(i) << " aph=" << ordinates_.alpha_half(o) << " a=" << ordinates_.alpha(o) << " r_imh=" << mesh_.cell_edge_position(i, 0) << " w_m=" << ordinates_.weights(o) << " sigma_t=" << data_.sigma_t(i, g) << endl;
+                    
+                        // cout << matrix << endl;
+                        // cout << lhs << endl;
+                        // cout << rhs << endl;
+                    // }
+                }
+            }
+            
+            update_psi_half(psi_half, psi, o);
+        }
+     }
+
+    void Sn_Transport::
+    sweep_outward(vector<double> &psi, vector<double> &psi_half, vector<double> &psi_boundary_sources, vector<double> &q)
+    {
+        for (unsigned o = ordinates_.number_of_ordinates() / 2; o < ordinates_.number_of_ordinates(); ++o)
+        {
+            for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+            { 
+                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                {
+                    Epetra_SerialDenseMatrix matrix (mesh_.number_of_nodes(), mesh_.number_of_nodes());
+                    Epetra_SerialDenseVector lhs (mesh_.number_of_nodes());
+                    Epetra_SerialDenseVector rhs (mesh_.number_of_nodes());
+        
+                    for (unsigned n1 = 0; n1 < mesh_.number_of_nodes(); ++n1)
+                    {
+                        double sum1 = 0;
+                        double sum2 = 0;
+                        
+                        for (unsigned n2 = 0; n2 < mesh_.number_of_nodes(); ++n2)
+                        {
+                            matrix(n1, n2) = a_pos(i, g, o, n1, n2);
+                            
+                            unsigned k1 = n2 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                            unsigned k2 = n2 + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                            if (i == 0)
+                            {
+                                cout << "n1=" << n1 << " n2=" << n2 << " a_pos=" << a_pos(i, g, o, n1, n2) << endl;
+                            }
+                            sum1 += get_l(i, n1, n2) * psi_half[k1];
+                            sum2 += get_m(i, n1, n2) * q[k2] / 2; // isotropic internal source
+                        }
+                        
+                        rhs(n1) = 2 * ordinates_.alpha(o) / ordinates_.weights(o) * sum1 + sum2;
+                    }
+                    
+                    if (i > 0)
+                    {
+                        unsigned k = mesh_.number_of_nodes() * (g + data_.number_of_groups() * (i - 1));
+                        
+                        rhs(0) += 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_.cell_edge_position(i, 0), 2) * psi[k];
+                    }
+                    else
+                    {
+                        unsigned k = g + data_.number_of_groups() * o;
+                        
+                        rhs(0) += 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_.cell_edge_position(i, 0), 2) * psi_boundary_sources[k];
+                    }
+                    
+                    epetra_solve(matrix, lhs, rhs);
+                    
+                    for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                    {
+                        unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
+                        
+                        psi[k] = lhs[n];
+                    }
+                    
+                    if (i==0)
+                    {
+                        cout << "************************************************" << endl;
+                        cout << "outward, i:" << i << " o:" << o << " g:" << g << endl << endl;
+
+                        cout << "mu_m=" << ordinates_.ordinates(o) << " dri=" << mesh_.cell_length(i) << " aph=" << ordinates_.alpha_half(o) << " a=" << ordinates_.alpha(o) << " r_imh=" << mesh_.cell_edge_position(i, 0) << " w_m=" << ordinates_.weights(o) << " sigma_t=" << data_.sigma_t(i, g) << endl;
+                        
+                        cout << matrix << endl;
+                        cout << lhs << endl;
+                        cout << rhs << endl;
+                    }
+                }
+            }
+            
+            update_psi_half(psi_half, psi, o);
+        }
+    }
+    
     void Sn_Transport::
     update_psi_half(vector<double> &psi_half,
                     vector<double> &psi,
@@ -468,6 +563,16 @@ namespace transport_ns
         }
     }
 
+    void Sn_Transport::
+    epetra_solve(Epetra_SerialDenseMatrix &matrix, Epetra_SerialDenseVector &lhs, Epetra_SerialDenseVector &rhs)
+    {
+        Epetra_SerialDenseSolver solver;
+        
+        solver.SetMatrix(matrix);
+        solver.SetVectors(lhs, rhs);
+        solver.Solve();
+    }
+    
     void Sn_Transport::
     solve()
     {
@@ -563,6 +668,8 @@ namespace transport_ns
                     phi_ = phi;
                 }
             }
+
+            // print_angular_flux(psi);
             // calculate_leakage(psi,
             //                   leakage);
         }
