@@ -5,15 +5,8 @@
 #include <string>
 #include <vector>
 
-#include <mpi.h>
-
-#include <Epetra_SerialDenseMatrix.h>
-#include <Epetra_SerialDenseVector.h>
-#include <Epetra_SerialDenseSolver.h>
-
 #include "Data.hh"
 #include "Mesh.hh"
-#include "Ordinates.hh"
 
 namespace transport_ns
 {
@@ -23,12 +16,10 @@ namespace transport_ns
     
     Sn_Transport::
     Sn_Transport(Data &data,
-                 Mesh &mesh,
-                 Ordinates &ordinates)
+                 Mesh &mesh)
     :
         data_(data),
         mesh_(mesh),
-        ordinates_(ordinates)
     {
         data_.check();
         mesh_.check();

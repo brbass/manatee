@@ -7,13 +7,8 @@
 #include <string>
 #include <vector>
 
-#include <Epetra_SerialDenseMatrix.h>
-#include <Epetra_SerialDenseVector.h>
-#include <Epetra_SerialDenseSolver.h>
-
 #include "Data.hh"
 #include "Mesh.hh"
-#include "Ordinates.hh"
 
 namespace transport_ns
 {
@@ -33,22 +28,14 @@ namespace transport_ns
         void calculate_source(vector<double> &q,
                               vector<double> &phi);
 
-        void slab_sweep(vector<double> &psi,
-                        vector<double> &q);
-
         void spherical_sweep(vector<double> &psi,
                              vector<double> &q);
 
-        void sweep_special(vector<double> &psi_half,
-                           vector<double> &q);
-
         void sweep_inward(vector<double> &psi,
-                          vector<double> &psi_half,
                           vector<double> &q,
                           vector<double> &psi_boundary_sources);
 
         void sweep_outward(vector<double> &psi,
-                           vector<double> &psi_half,
                            vector<double> &q,
                            vector<double> &psi_boundary_sources);
 

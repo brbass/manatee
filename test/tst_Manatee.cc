@@ -95,7 +95,7 @@ int test_downscatter()
                 unsigned k1 = gf + number_of_groups * (gt + number_of_groups * (i + number_of_cells * m));
 
                 m = 1;
-                unsigned k2 = gf + number_of_groups * (gt + number_of_groups * (i + number_of_cells * m));
+                //unsigned k2 = gf + number_of_groups * (gt + number_of_groups * (i + number_of_cells * m));
 
                 if (gf == gt)
                 {
@@ -160,10 +160,10 @@ int test_spherical()
     unsigned number_of_scattering_moments = 1;
     unsigned number_of_ordinates = 8;
     
-    double side_length = 1;
+    double side_length = 10;
     vector<unsigned> number_of_cells_per_dimension(1, number_of_cells);
     vector<double> internal_source(number_of_cells * number_of_groups, 1.0);
-    vector<double> boundary_sources(number_of_groups * 2, 0.0);
+    vector<double> boundary_sources(number_of_groups * number_of_ordinates * 2, 0.0);
     vector<double> sigma_t(number_of_cells * number_of_groups, 1.0);
     vector<double> sigma_s(number_of_cells * number_of_groups * number_of_groups * number_of_scattering_moments, 0);
     vector<double> nu_sigma_f(number_of_cells * number_of_groups, 0.0);
@@ -179,8 +179,18 @@ int test_spherical()
             {
                 unsigned k2 = gf + number_of_groups * (gt + number_of_groups * i);
                 
-                sigma_s[k2] = 0.4 / number_of_groups;
+                // sigma_s[k2] = 0.5 / number_of_groups;
             }
+        }
+    }
+
+    for (unsigned o = 0; o < number_of_ordinates; ++o)
+    {
+        for (unsigned g = 0; g < number_of_groups; ++g)
+        {
+            unsigned k = g + number_of_groups * (0 + 2 * o);
+
+            boundary_sources[k] = 1;
         }
     }
     
@@ -200,7 +210,7 @@ int test_spherical()
     
     transport.solve();
     
-    // transport.print_scalar_flux();
+    //transport.print_scalar_flux();
     
     return 0;
 }

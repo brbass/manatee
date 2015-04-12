@@ -1,5 +1,5 @@
-#ifndef Sn_Transport_hh
-#define Sn_Transport_hh
+#ifndef FEM_Transport_hh
+#define FEM_Transport_hh
 
 #include <cmath>
 #include <iomanip>
@@ -7,13 +7,8 @@
 #include <string>
 #include <vector>
 
-#include <Epetra_SerialDenseMatrix.h>
-#include <Epetra_SerialDenseVector.h>
-#include <Epetra_SerialDenseSolver.h>
-
 #include "Data.hh"
 #include "Mesh.hh"
-#include "Ordinates.hh"
 
 namespace transport_ns
 {
@@ -23,7 +18,7 @@ namespace transport_ns
     using namespace data_ns;
     using namespace mesh_ns;
     
-    class Sn_Transport
+    class FEM_Transport
     {
     private:
 
@@ -33,22 +28,14 @@ namespace transport_ns
         void calculate_source(vector<double> &q,
                               vector<double> &phi);
 
-        void slab_sweep(vector<double> &psi,
-                        vector<double> &q);
-
         void spherical_sweep(vector<double> &psi,
                              vector<double> &q);
 
-        void sweep_special(vector<double> &psi_half,
-                           vector<double> &q);
-
         void sweep_inward(vector<double> &psi,
-                          vector<double> &psi_half,
                           vector<double> &q,
                           vector<double> &psi_boundary_sources);
 
         void sweep_outward(vector<double> &psi,
-                           vector<double> &psi_half,
                            vector<double> &q,
                            vector<double> &psi_boundary_sources);
 
@@ -58,20 +45,18 @@ namespace transport_ns
                                vector<double> &error_phi,
                                vector<double> &error_phi_old);
 
-        void epetra_solve(Epetra_SerialDenseMatrix &matrix, Epetra_SerialDenseVector &lhs, Epetra_SerialDenseVector &rhs);        
-
         void analytic_solve(vector<double> &matrix, vector<double> &lhs, vector<double> &rhs);
         
         Data &data_;
         Mesh &mesh_;
-        Ordinates &ordinates_;
-        
+
+        unsigned number_of_angular_nodes = 2;
         unsigned max_iterations_ = 1000;
         double tolerance_ = 1e-10;
         
-        double iterations_;
+        unsigned iterations_;
         vector<double> phi_;
-
+        
         double get_k_spec(unsigned n1, unsigned n2)
         {
             unsigned o = n2 + mesh_.number_of_nodes() * n1;
@@ -210,26 +195,21 @@ namespace transport_ns
         
     public:
         
-        Sn_Transport(Data &data,
-                     Mesh &mesh,
-                     Ordinates &ordinates);
+        FEM_Transport(Data &data,
+                     Mesh &mesh)
         
         void solve();
         
         void psi_to_phi(vector<double> &phi,
                         vector<double> &psi);
 
-        void update_psi_half(vector<double> &psi_half,
-                             vector<double> &psi,
-                             unsigned o);
-        
         void print_scalar_flux()
         {
             using namespace std;
 
             const int w = 8;
             
-            cout << "Sn_Transport" << endl;
+            cout << "FEM_Transport" << endl;
 
             cout << left;
             cout << setw(w) <<  "cell" << setw(w) << "node" << setw(w) << "group" << setw(w) << "phi" << endl;
@@ -255,7 +235,7 @@ namespace transport_ns
 
             const int w = 10;
             
-            cout << "Sn_Transport" << endl;
+            cout << "FEM_Transport" << endl;
 
             cout << left;
             cout << setw(w) <<  "cell" << setw(w) << "node" << setw(w) << "group" << setw(w) << "ordinate" << setw(w) << "phi" << endl;
