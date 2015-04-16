@@ -601,27 +601,27 @@ namespace transport_ns
             vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
             vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
             bool converged = false;
-
+            
             // begin iterations
             for (unsigned it = 0; it < max_iterations_; ++it)
             {
                 calculate_source(q,
                                  phi);
-
+                
                 slab_sweep(psi,
                            q);
-
+                
                 phi_old = phi;
-            
+                
                 psi_to_phi(phi,
                            psi);
-
+                
                 check_convergence(converged,
                                   phi,
                                   phi_old,
                                   error_phi,
                                   error_phi_old);
-
+                
                 if (converged)
                 {
                     iterations_ = it + 1;
@@ -682,13 +682,200 @@ namespace transport_ns
                 }
             }
 
-            print_scalar_flux();
+            // print_scalar_flux();
             // print_angular_flux(psi);
             // calculate_leakage(psi,
             //                   leakage);
         }
     }
 
+    void Sn_Transport::
+    solve_eigenvalue()
+    {
+        using namespace std;
+
+        if (mesh_.geometry("slab"))
+        {
+            // temporary variables
+            vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
+            vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
+            vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
+            vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
+            vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            
+            bool converged = false;
+
+            double k_eigenvalue = 1.0;
+            double k_eigenvalue_old = 1.0;
+            
+            // begin iterations
+            for (unsigned it = 0; it < max_iterations_; ++it)
+            {
+                calculate_source(q,
+                                 phi);
+                
+                slab_sweep(psi,
+                           q);
+                
+                phi_old = phi;
+                
+                psi_to_phi(phi,
+                           psi);
+
+                calculate_k(k_eigenvalue,
+                            k_eigenvalue_old,
+                            phi,
+                            phi_old);
+                
+                normalize_phi(phi);
+                
+                check_convergence(converged,
+                                  phi,
+                                  phi_old,
+                                  error_phi,
+                                  error_phi_old);
+                
+                if (converged)
+                {
+                    iterations_ = it + 1;
+                    k_eigenvalue_ = k_eigenvalue;
+                    phi_ = phi;
+                    
+                    break;
+                }
+                else if (it==max_iterations_ - 1)
+                {
+                    iterations_ = it + 1;
+                    k_eigenvalue_ = k_eigenvalue;
+                    phi_ = phi;
+                }
+            }
+            // calculate_leakage(psi,
+            //                   leakage);
+        }
+        else if (mesh_.geometry("spherical"))
+        {
+            // temporary variables
+            vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
+            vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
+            vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
+            vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
+            vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            
+            bool converged = false;
+
+            double k_eigenvalue = 1.0;
+            double k_eigenvalue_old = 1.0;
+            
+            // begin iterations
+            for (unsigned it = 0; it < max_iterations_; ++it)
+            {
+                calculate_source(q,
+                                 phi);
+                
+                spherical_sweep(psi,
+                                q);
+                
+                phi_old = phi;
+                psi_to_phi(phi,
+                           psi);
+
+                // k_eigenvalue_old = k_eigenvalue;
+                calculate_k(k_eigenvalue,
+                            k_eigenvalue_old,
+                            phi,
+                            phi_old);
+
+                normalize_phi(phi);
+                
+                check_convergence(converged,
+                                  phi,
+                                  phi_old,
+                                  error_phi,
+                                  error_phi_old);
+                
+                if (converged)
+                {
+                    iterations_ = it + 1;
+                    k_eigenvalue_ = k_eigenvalue;
+                    phi_ = phi;
+                    break;
+                }
+                else if (it==max_iterations_ - 1)
+                {
+                    iterations_ = it + 1;
+                    k_eigenvalue_ = k_eigenvalue;
+                    phi_ = phi;
+                }
+            }
+
+            // print_scalar_flux();
+            // print_angular_flux(psi);
+            // calculate_leakage(psi,
+            //                   leakage);
+        }
+    }
+
+    void Sn_Transport::
+    calculate_k(double &k,
+                double &k_old,
+                vector<double> &phi,
+                vector<double> &phi_old)
+    {
+        double num = 0;
+        double den = 0;
+        
+        for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+        {
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                {
+                    unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                    
+                    num += mesh_.cell_length(i) * data_.nu_sigma_f(i, g) * phi[k1];
+                    den += mesh_.cell_length(i) * data_.nu_sigma_f(i, g) * phi_old[k1];
+                }
+            }
+        }
+
+        k = /*k_old **/ num / den;
+    }
+
+    void Sn_Transport::
+    normalize_phi(vector<double> &phi)
+    {
+        double sum = 0;
+        
+        for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+        {
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                {
+                    unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                    
+                    sum += mesh_.cell_length(i) * phi[k1];
+                }
+            }
+        }
+
+        for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+        {
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                {
+                    unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+
+                    phi[k1] /= sum;
+                }
+            }
+        }
+    }
+    
     void Sn_Transport::
     calculate_leakage(vector<double> &psi,
                       vector<double> &leakage)

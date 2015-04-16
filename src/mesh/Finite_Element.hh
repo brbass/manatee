@@ -55,9 +55,9 @@ namespace mesh_ns
             // kw: which weight function
             // kd: derivative of basis function
             // return integral of the product
-
+            
             unsigned kd = kdb * kdb + kdw * kdw;
-
+            
             // linear
             switch (kd)
             {

@@ -37,7 +37,7 @@ namespace transport_ns
     {
         data_.check();
         mesh_.check();
-
+        
         number_of_edges_ = mesh_.number_of_cells() + 1;
         
         num_global_elements_ = number_of_edges_ * data_.number_of_groups();
@@ -119,13 +119,24 @@ namespace transport_ns
                         for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
                         {
                             unsigned k2 = o2 + mesh_.number_of_nodes() * gf;
-                            
-                            fill_matrix(k1, k2) -= dx2 / 4 * data_.sigma_s(i, gf, gt, n) * mesh_.stiffness(i, o1, o2);
+
+                            if (problem_type_.compare("forward") == 0)
+                            {
+                                fill_matrix(k1, k2) -= dx2 / 4 * data_.sigma_s(i, gf, gt, n) * mesh_.stiffness(i, o1, o2);
+                            }
+                            else if (problem_type_.compare("adjoint") == 0)
+                            {
+                                fill_matrix(k1, k2) -= dx2 / 4 * data_.sigma_s(i, gt, gf, n) * mesh_.stiffness(i, o1, o2);
+                            }
+                            else
+                            {
+                                cerr << "problem type not available" << endl;
+                            }
                         }
                     }
                 }
             }
-                
+            
             for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
             {
                 for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
@@ -391,10 +402,21 @@ namespace transport_ns
             {
                 for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
                 {
-                    invert_matrix(gf, gt) -= data_.sigma_s(i, gf, gt, n+1);
+                    if (problem_type_.compare("forward") == 0)
+                    {
+                        invert_matrix(gf, gt) -= data_.sigma_s(i, gf, gt, n+1);
+                    }
+                    else if (problem_type_.compare("adjoint") == 0)
+                    {
+                        invert_matrix(gf, gt) -= data_.sigma_s(i, gt, gf, n+1);
+                    }
+                    else
+                    {
+                        cerr << "problem type not available" << endl;
+                    }
                 }
             }
-
+            
             solver.SetMatrix(invert_matrix);
             solver.Invert();
                 

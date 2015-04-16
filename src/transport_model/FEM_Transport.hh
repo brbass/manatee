@@ -22,187 +22,144 @@ namespace transport_ns
     {
     private:
 
-        void calculate_leakage(vector<double> &psi,
-                               vector<double> &leakage);
+        void calculate_source();
 
-        void calculate_source(vector<double> &q,
-                              vector<double> &phi);
+        void spherical_sweep();
 
-        void spherical_sweep(vector<double> &psi,
-                             vector<double> &q);
+        void sweep_inward();
 
-        void sweep_inward(vector<double> &psi,
-                          vector<double> &q,
-                          vector<double> &psi_boundary_sources);
-
-        void sweep_outward(vector<double> &psi,
-                           vector<double> &q,
-                           vector<double> &psi_boundary_sources);
-
-        void check_convergence(bool &converged,
-                               vector<double> &phi,
-                               vector<double> &phi_old,
-                               vector<double> &error_phi,
-                               vector<double> &error_phi_old);
+        void sweep_outward();
+        
+        void check_convergence();
 
         void analytic_solve(vector<double> &matrix, vector<double> &lhs, vector<double> &rhs);
+
+        void epetra_solve(vector<double> &matrix, vector<double> &lhs, vector<double> &rhs, int size);
         
         Data &data_;
         Mesh &mesh_;
 
-        unsigned number_of_angular_nodes = 2;
-        unsigned max_iterations_ = 1000;
-        double tolerance_ = 1e-10;
+        bool converged_;
+        
+        unsigned number_of_angular_nodes_ = 2;
+        unsigned total_nodes_ = 4;
+        unsigned max_iterations_;
+        double tolerance_;
+
+        vector<double> xi_coord = {-1.0, -1.0, 1.0, 1.0};
+        vector<double> eta_coord = {-1.0, 1.0, -1.0, 1.0};
+        vector<double> mp_coord = {-1.0, 1.0};
         
         unsigned iterations_;
         vector<double> phi_;
+        vector<double> phi_old_;
+        vector<double> error_phi_;
+        vector<double> error_phi_old_;
+        vector<double> psi_;
+        vector<double> q_;
+        vector<double> psi_boundary_sources_;
+        double k_eigenvalue_;
+        double k_eigenvalue_old_;
+
+        vector<double> matrix_;
+        vector<double> rhs_;
+        vector<double> lhs_;
         
-        double get_k_spec(unsigned n1, unsigned n2)
-        {
-            unsigned o = n2 + mesh_.number_of_nodes() * n1;
-            
-            switch(o)
-            {
-            case 0:
-                return -1.0 / 2.0;
-            case 1:
-                return -1.0 / 2.0;
-            case 2:
-                return 1.0 / 2.0;
-            case 3:
-                return 1.0 / 2.0;
-            default:
-                cerr << "no such k_spec" << endl;
-                return 0;
-            }
-        }
+        double get_k_r(unsigned i, unsigned n1, unsigned n2, unsigned mp);
 
-        double get_m_spec(unsigned n1, unsigned n2)
-        {
-            unsigned o = n2 + mesh_.number_of_nodes() * n1;
-            
-            switch(o)
-            {
-            case 0:
-                return 2.0 / 3.0;
-            case 1:
-                return 1.0 / 3.0;
-            case 2:
-                return 1.0 / 3.0;
-            case 3:
-                return 2.0 / 3.0;
-            default:
-                cerr << "no such m_spec" << endl;
-                return 0;
-            }
-        }
+        double get_k_l(unsigned i, unsigned n1, unsigned n2, unsigned mp);
+        
+        double get_l(unsigned i, unsigned n1, unsigned n2, unsigned mp);
 
-        double get_k(unsigned i, unsigned n1, unsigned n2)
-        {
-            unsigned o = n2 + mesh_.number_of_nodes() * n1;
-            
-            switch(o)
-            {
-            case 0:
-                return - pow(mesh_.cell_center_position(i), 2) / 2.0 + mesh_.cell_center_position(i) * mesh_.cell_length(i) / 6.0 - pow(mesh_.cell_length(i), 2) / 24.0;
-            case 1:
-                return - pow(mesh_.cell_center_position(i), 2) / 2.0 - mesh_.cell_center_position(i) * mesh_.cell_length(i) / 6.0 - pow(mesh_.cell_length(i), 2) / 24.0;
-            case 2:
-                return pow(mesh_.cell_center_position(i), 2) / 2.0 - mesh_.cell_center_position(i) * mesh_.cell_length(i) / 6.0 + pow(mesh_.cell_length(i), 2) / 24.0;
-            case 3:
-                return pow(mesh_.cell_center_position(i), 2) / 2.0 + mesh_.cell_center_position(i) * mesh_.cell_length(i) / 6.0 + pow(mesh_.cell_length(i), 2) / 24.0;
-            default:
-                cerr << "no such k" << endl;
-                return 0;
-            }
-        }
+        double get_m(unsigned i, unsigned n1, unsigned n2);
 
-        double get_l(unsigned i, unsigned n1, unsigned n2)
+        inline double &psi(unsigned i, unsigned g, unsigned n, unsigned o, unsigned mp)
         {
-            unsigned o = n2 + mesh_.number_of_nodes() * n1;
-            
-            switch(o)
-            {
-            case 0:
-                return mesh_.cell_center_position(i) * 2.0 / 3.0 - mesh_.cell_length(i) / 6.0;
-            case 1:
-                return mesh_.cell_center_position(i) / 3.0;
-            case 2:
-                return mesh_.cell_center_position(i) / 3.0;
-            case 3:
-                return mesh_.cell_center_position(i) * 2.0 / 3.0 + mesh_.cell_length(i) / 6.0;
-            default:
-                cerr << "no such k" << endl;
-                return 0;
-            }
-        }
-
-        double get_m(unsigned i, unsigned n1, unsigned n2)
-        {
-            unsigned n = n2 + mesh_.number_of_nodes() * n1;
-            
-            switch(n)
-            {
-            case 0:
-                return pow(mesh_.cell_center_position(i), 2) * 2.0 / 3.0 - mesh_.cell_center_position(i) * mesh_.cell_length(i) / 3.0 + pow(mesh_.cell_length(i), 2) / 15.0;
-            case 1:
-                return pow(mesh_.cell_center_position(i), 2) / 3.0 + pow(mesh_.cell_length(i), 2) / 60.0;
-            case 2:
-                return pow(mesh_.cell_center_position(i), 2) / 3.0 + pow(mesh_.cell_length(i), 2) / 60.0;
-            case 3:
-                return pow(mesh_.cell_center_position(i), 2) * 2.0 / 3.0 + mesh_.cell_center_position(i) * mesh_.cell_length(i) / 3.0 + pow(mesh_.cell_length(i), 2) / 15.0;
-            default:
-                cerr << "no such k" << endl;
-                return 0;
-            }
-        }
-
-        double a_pos(unsigned i, unsigned g, unsigned o, unsigned n1, unsigned n2)
-        {
-            double val = - 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * get_k(i, n1, n2) + 4 * ordinates_.alpha_half(o) / ordinates_.weights(o) * get_l(i, n1, n2) + data_.sigma_t(i, g) * get_m(i, n1, n2);
-            
-            if (n1 == 1 && n2 == 1)
-            {
-                val += 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_.cell_edge_position(i, 1), 2);
-            }
-            
-            return val;
+            return psi_[n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + number_of_angular_nodes_ * (mp + 2 * i)))];
         }
         
-        double a_neg(unsigned i, unsigned g, unsigned o, unsigned n1, unsigned n2)
+        inline double &q(unsigned i, unsigned g, unsigned n)
         {
-            double val = - 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * get_k(i, n1, n2) + 4 * ordinates_.alpha_half(o) / ordinates_.weights(o) * get_l(i, n1, n2) + data_.sigma_t(i, g) * get_m(i, n1, n2);
-            
-            if (n1 == 0 && n2 == 0)
-            {
-                val -= 2 * ordinates_.ordinates(o) / mesh_.cell_length(i) * pow(mesh_.cell_edge_position(i, 0), 2);
-            }
-            
-            return val;
+            return q_[n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i)];
+        }
+
+        inline double &phi(unsigned i, unsigned g, unsigned n)
+        {
+            return phi_[n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i)];
+        }
+
+        inline double &phi_old(unsigned i, unsigned g, unsigned n)
+        {
+            return phi_old_[n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i)];
+        }
+
+        inline double &error_phi(unsigned i, unsigned g, unsigned n)
+        {
+            return error_phi_[n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i)];
         }
         
-        double a_spec(unsigned i, unsigned g, unsigned n1, unsigned n2)
+        inline double &error_phi_old(unsigned i, unsigned g, unsigned n)
         {
-            double val = 2 / mesh_.cell_length(i) * get_k_spec(n1, n2) + data_.sigma_t(i, g) * get_m_spec(n1, n2);
-            
-            if (n1 == 0 && n2 == 0)
-            {
-                val += 2 / mesh_.cell_length(i);
-            }
-            
-            return val;
+            return error_phi_old_[n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i)];
         }
+        
+        inline double &psi_boundary_sources(unsigned g, unsigned o, unsigned mp)
+        {
+            return psi_boundary_sources_[g + data_.number_of_groups() * (o + number_of_angular_nodes_ * mp)];
+        }
+
+        inline double &matrix(unsigned al, unsigned be)
+        {
+            return matrix_[be + number_of_angular_nodes_ * mesh_.number_of_nodes() * al];
+        }
+
+        inline double &lhs(unsigned n, unsigned o)
+        {
+            return lhs(o + number_of_angular_nodes_ * n);
+        }
+
+        inline double &lhs(unsigned be)
+        {
+            return lhs_[be];
+        }
+        
+        inline double &rhs(unsigned n, unsigned o)
+        {
+            return rhs(n + mesh_.number_of_nodes() * o);
+        }
+
+        inline double &rhs(unsigned be)
+        {
+            return rhs_[be];
+        }
+
         
     public:
         
         FEM_Transport(Data &data,
-                     Mesh &mesh)
+                      Mesh &mesh,
+                      unsigned max_iterations,
+                      double tolerance);
         
         void solve();
         
-        void psi_to_phi(vector<double> &phi,
-                        vector<double> &psi);
+        void solve_eigenvalue();
+        
+        void psi_to_phi();
 
+        void print_eigenvalue()
+        {
+            cout << "FEM_Transport" << endl;
+            
+            cout << "k_eigenvalue = " << setprecision(15) << k_eigenvalue_ << endl;
+
+            cout << "iterations: " << iterations_ << endl << endl;
+        }
+
+        void calculate_k();
+
+        void normalize_phi();
+        
         void print_scalar_flux()
         {
             using namespace std;
@@ -219,17 +176,15 @@ namespace transport_ns
                 {
                     for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
                     {
-                        unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
-                        
-                        cout << setw(w) << i << setw(w) << n << setw(w) << g << setw(w) << phi_[k] << endl;
+                        cout << setw(w) << i << setw(w) << n << setw(w) << g << setw(w) << phi(i, g, n) << endl;
                     }
                 }
             }
 
-            cout << "it: " << iterations_ << endl << endl;
+            cout << "iterations: " << iterations_ << endl << endl;
         }
 
-        void print_angular_flux(vector<double> &psi)
+        void print_angular_flux()
         {
             using namespace std;
 
@@ -238,19 +193,18 @@ namespace transport_ns
             cout << "FEM_Transport" << endl;
 
             cout << left;
-            cout << setw(w) <<  "cell" << setw(w) << "node" << setw(w) << "group" << setw(w) << "ordinate" << setw(w) << "phi" << endl;
+            cout << setw(w) <<  "cell" << setw(w) << "node" << setw(w) << "group" << setw(w) << "ordinate" << setw(w) << "neg" << setw(w) << "phi" << endl;
             for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
                 for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
                 {
                     for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
                     {
-                        for (unsigned o = 0; o < ordinates_.number_of_ordinates(); ++o)
+                        for (unsigned o = 0; o < number_of_angular_nodes_; ++o)
                         {
-                            unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
-                            if(psi[k] > 10 || psi[k] < 0)
+                            for (unsigned mp = 0; mp < 2; ++mp)
                             {
-                                cout << setw(w) << i << setw(w) << n << setw(w) << g << setw(w) << o << setw(w) << psi[k] << endl;
+                                cout << setw(w) << i << setw(w) << n << setw(w) << g << setw(w) << o << setw(w) << mp << setw(w) << psi(i, g, n, o, mp) << endl;
                             }
                         }
                     }

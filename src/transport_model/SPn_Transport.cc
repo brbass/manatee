@@ -194,8 +194,19 @@ namespace transport_ns
                             for (unsigned o2 = 0; o2< mesh_.number_of_nodes(); ++o2)
                             {
                                 unsigned k2 = o2 + mesh_.number_of_nodes() * (gf + data_.number_of_groups() * m);
-                                
-                                fill_matrix(k1, k2) -= data_.sigma_s(i, gf, gt, n) * mesh_.stiffness(i, o1 + 1, o2 + 1); // 16
+
+                                if (problem_type_.compare("forward") == 0)
+                                {
+                                    fill_matrix(k1, k2) -= data_.sigma_s(i, gf, gt, n) * mesh_.stiffness(i, o1 + 1, o2 + 1);
+                                }
+                                else if (problem_type_.compare("adjoint") == 0)
+                                {
+                                    fill_matrix(k1, k2) -= data_.sigma_s(i, gt, gf, n) * mesh_.stiffness(i, o1 + 1, o2 + 1);
+                                }
+                                else
+                                {
+                                    cerr << "problem type not available" << endl;
+                                }
                             }
                         }
                     }
@@ -322,13 +333,30 @@ namespace transport_ns
                 {
                     invert_matrix(g, g) += data_.sigma_t(i, g);
                 }
-                
-                for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+
+                if (problem_type_.compare("forward") == 0)
                 {
-                    for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                    for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
                     {
-                        invert_matrix(gf, gt) -= data_.sigma_s(i, gf, gt, n+1);
+                        for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                        {
+                            invert_matrix(gf, gt) -= data_.sigma_s(i, gf, gt, n+1);
+                        }
                     }
+                }
+                else if (problem_type_.compare("adjoint") == 0)
+                {
+                    for (unsigned gf = 0; gf < data_.number_of_groups(); ++gf)
+                    {
+                        for (unsigned gt = 0; gt < data_.number_of_groups(); ++gt)
+                        {
+                            invert_matrix(gf, gt) -= data_.sigma_s(i, gt, gf, n+1);
+                        }
+                    }
+                }
+                else
+                {
+                    cerr << "problem type not available" << endl;
                 }
 
                 solver.SetMatrix(invert_matrix);

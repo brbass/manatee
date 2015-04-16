@@ -70,8 +70,16 @@ namespace transport_ns
         double tolerance_ = 1e-10;
         
         double iterations_;
+        double k_eigenvalue_ = 1;
         vector<double> phi_;
 
+        void calculate_k(double &k,
+                         double &k_old,
+                         vector<double> &phi,
+                         vector<double> &phi_old);
+        
+        void normalize_phi(vector<double> &phi);
+        
         double get_k_spec(unsigned n1, unsigned n2)
         {
             unsigned o = n2 + mesh_.number_of_nodes() * n1;
@@ -215,6 +223,7 @@ namespace transport_ns
                      Ordinates &ordinates);
         
         void solve();
+        void solve_eigenvalue();
         
         void psi_to_phi(vector<double> &phi,
                         vector<double> &psi);
@@ -222,6 +231,15 @@ namespace transport_ns
         void update_psi_half(vector<double> &psi_half,
                              vector<double> &psi,
                              unsigned o);
+
+        void print_eigenvalue()
+        {
+            cout << "Sn_Transport" << endl;
+
+            cout << "k_eigenvalue = " << setprecision(15) << k_eigenvalue_ << endl;
+
+            cout << "iterations: " << iterations_ << endl << endl;
+        }
         
         void print_scalar_flux()
         {
@@ -246,7 +264,7 @@ namespace transport_ns
                 }
             }
 
-            cout << "it: " << iterations_ << endl << endl;
+            cout << "iterations: " << iterations_ << endl << endl;
         }
 
         void print_angular_flux(vector<double> &psi)
