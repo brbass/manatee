@@ -346,6 +346,14 @@ int test_mc()
     Monte_Carlo monte_carlo(data,
 			    mesh);
     
+    string desc = "monte carlo";
+    Teuchos::Time timer(desc);
+
+    timer.start();
+    timer.stop();
+    timer.reset();
+
+    
     return 0;
 }
 

@@ -59,7 +59,7 @@ namespace transport_ns
         vector<double> q_;
         vector<double> psi_boundary_sources_;
         double k_eigenvalue_;
-        double k_eigenvalue_old_;
+        //double k_eigenvalue_old_;
 
         vector<double> matrix_;
         vector<double> rhs_;
@@ -68,6 +68,8 @@ namespace transport_ns
         double get_k_r(unsigned i, unsigned n1, unsigned n2, unsigned mp);
 
         double get_k_l(unsigned i, unsigned n1, unsigned n2, unsigned mp);
+
+        double get_j(unsigned i, unsigned n1, unsigned n2, unsigned mp);
         
         double get_l(unsigned i, unsigned n1, unsigned n2, unsigned mp);
 

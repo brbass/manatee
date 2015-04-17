@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include <mpi.h>
+//#include <mpi.h>
 
 #include "Transport_Model.hh"
 
@@ -16,11 +16,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    MPI_Init(&argc, &argv);
+    //MPI_Init(&argc, &argv);
     
     string input_folder = argv[1];
     
     Transport_Model transport_model(input_folder);
 
-    MPI_Finalize();
+    //MPI_Finalize();
 }

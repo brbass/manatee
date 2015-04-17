@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <mpi.h>
+//#include <mpi.h>
 
 #include <Epetra_SerialDenseMatrix.h>
 #include <Epetra_SerialDenseVector.h>

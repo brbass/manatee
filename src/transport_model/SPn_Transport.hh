@@ -6,7 +6,8 @@
 #include <memory>
 #include <vector>
 
-#include <Epetra_MpiComm.h>
+//#include <Epetra_MpiComm.h>
+#include <Epetra_SerialComm.h>
 #include <Epetra_Map.h>
 #include <Epetra_CrsMatrix.h>
 #include <Epetra_FECrsMatrix.h>
@@ -52,7 +53,8 @@ namespace transport_ns
         vector<int> row_map_; // position of elements from diagonal
         
         unique_ptr<Epetra_Map> map_;
-        unique_ptr<Epetra_MpiComm> comm_;
+        //unique_ptr<Epetra_MpiComm> comm_;
+        unique_ptr<Epetra_SerialComm> comm_;
         unique_ptr<Epetra_FECrsMatrix> matrix_;
         unique_ptr<Epetra_Vector> lhs_;
         unique_ptr<Epetra_Vector> rhs_;

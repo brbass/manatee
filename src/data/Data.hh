@@ -21,7 +21,8 @@ namespace data_ns
         vector<double> &boundary_sources_;
         vector<double> &sigma_t_;
         vector<double> &sigma_s_;
-        vector<double> &nu_sigma_f_;
+        vector<double> nu_;
+        vector<double> &sigma_f_;
         vector<double> &chi_;
         vector<double> d_;
         
@@ -31,6 +32,18 @@ namespace data_ns
 
     public:
         
+        Data(unsigned &number_of_cells,
+             unsigned &number_of_groups,
+             unsigned &number_of_scattering_moments,
+             vector<double> &internal_source,
+             vector<double> &boundary_sources,
+             vector<double> &sigma_t,
+             vector<double> &sigma_s,
+             vector<double> &nu,
+             vector<double> &sigma_f,
+             vector<double> &chi,
+             vector<string> &boundary_conditions);
+
         Data(unsigned &number_of_cells,
              unsigned &number_of_groups,
              unsigned &number_of_scattering_moments,
@@ -77,7 +90,7 @@ namespace data_ns
     
         inline double nu_sigma_f(unsigned cell, unsigned from_group)
         {
-            return nu_sigma_f_[from_group + number_of_groups_ * cell];
+            return nu_[from_group + number_of_groups_ * cell] * sigma_f_[from_group + number_of_groups_ * cell];
         }
             
         inline double chi(unsigned cell, unsigned to_group)

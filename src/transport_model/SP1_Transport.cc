@@ -6,13 +6,14 @@
 #include <string>
 #include <vector>
 
-#include <mpi.h>
+//#include <mpi.h>
 
 #include <Amesos.h>
 #include <Epetra_CrsMatrix.h>
 #include <Epetra_FECrsMatrix.h>
 #include <Epetra_LinearProblem.h>
-#include <Epetra_MpiComm.h>
+#include <Epetra_SerialComm.h>
+//#include <Epetra_MpiComm.h>
 #include <Epetra_Map.h>
 #include <Epetra_SerialDenseMatrix.h>
 #include <Epetra_SerialDenseSolver.h>
@@ -41,8 +42,9 @@ namespace transport_ns
         number_of_edges_ = mesh_.number_of_cells() + 1;
         
         num_global_elements_ = number_of_edges_ * data_.number_of_groups();
-
-        comm_ = unique_ptr<Epetra_MpiComm> (new Epetra_MpiComm(MPI_COMM_WORLD));
+ 
+        comm_ = unique_ptr<Epetra_SerialComm> (new Epetra_SerialComm);
+        //comm_ = unique_ptr<Epetra_MpiComm> (new Epetra_MpiComm(MPI_COMM_WORLD));
         map_ = unique_ptr<Epetra_Map> (new Epetra_Map(num_global_elements_, index_base_, *comm_));
         
         initialize_d();

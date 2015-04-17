@@ -58,29 +58,6 @@ namespace transport_ns
     void FEM_Transport::
     spherical_sweep()
     {
-        // boundary condition, r=0
-        if (data_.boundary_condition(0).compare("reflected") == 0)
-        {
-            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
-            {
-                unsigned m = 0;
-                unsigned p = 1;
-                unsigned i = 0;
-                unsigned n = 0;
-                
-                for (unsigned o = 0; o < number_of_angular_nodes_; ++o)
-                {
-                    psi_boundary_sources(g, o, p) = psi(i, g, n, o, m);
-                }
-            }
-        }
-        else
-        {
-            cerr << "boundary condition \"" << data_.boundary_condition(0) << "\" not available" << endl;
-        }
-        
-        sweep_outward();
-
         // boundary condition, r=R
         if (data_.boundary_condition(1).compare("reflected") == 0)
         {
@@ -93,7 +70,7 @@ namespace transport_ns
                 
                 for (unsigned o = 0; o < number_of_angular_nodes_; ++o)
                 {
-                    psi_boundary_sources(g, o, m) = psi(i, g, n, o, p);
+                    psi_boundary_sources(g, o, m) = psi(i, g, n, number_of_angular_nodes_ - o - 1, p);
                 }
             }
         }
@@ -118,6 +95,28 @@ namespace transport_ns
         
         sweep_inward();
         
+        // boundary condition, r=0
+        if (data_.boundary_condition(0).compare("reflected") == 0)
+        {
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                unsigned m = 0;
+                unsigned p = 1;
+                unsigned i = 0;
+                unsigned n = 0;
+                
+                for (unsigned o = 0; o < number_of_angular_nodes_; ++o)
+                {
+                    psi_boundary_sources(g, o, p) = psi(i, g, n, number_of_angular_nodes_ - o - 1, m);
+                }
+            }
+        }
+        else
+        {
+            cerr << "boundary condition \"" << data_.boundary_condition(0) << "\" not available" << endl;
+        }
+        
+        sweep_outward();
 
         // print_angular_flux();
     }
@@ -129,8 +128,9 @@ namespace transport_ns
         lhs_.assign(total_nodes_, 0);
         rhs_.assign(total_nodes_, 0);
         
-        unsigned mp = 0;
-
+        unsigned m = 0;
+        unsigned p = 1;
+        
         // first cell
         for (unsigned g = 0; g < data_.number_of_groups(); ++g)
         {
@@ -150,9 +150,11 @@ namespace transport_ns
                         {
                             unsigned al = oa + number_of_angular_nodes_ * na;
                             
-                            matrix(al, be) = get_k_l(i, al, be, mp) + get_l(i, al, be, mp) + get_m(i, al, be) * data_.sigma_t(i, g);
+                            matrix(al, be) = get_k_l(i, al, be, m) + get_l(i, al, be, m) + get_m(i, al, be) * data_.sigma_t(i, g);
                             
-                            sum += get_m(i, al, be) * q(i, g, na) / 2 - get_k_r(i, al, be, mp) * psi_boundary_sources(g, oa, mp);
+                            sum += get_m(i, al, be) * q(i, g, na) / 2;
+                            sum -= get_j(i, al, be, m) * psi(i, g, na, oa, p);
+                            sum -= get_k_r(i, al, be, m) * psi_boundary_sources(g, oa, m);
                         }
                     }
                     
@@ -166,7 +168,7 @@ namespace transport_ns
             {
                 for (unsigned o = 0; o < number_of_angular_nodes_; ++o)
                 {
-                    psi(i, g, n, o, mp) = lhs(n, o);
+                    psi(i, g, n, o, m) = lhs(n, o);
                 }
             }
         }                
@@ -190,9 +192,11 @@ namespace transport_ns
                             {
                                 unsigned al = oa + number_of_angular_nodes_ * na;
 
-                                matrix(al, be) = get_k_l(i, al, be, mp) + get_l(i, al, be, mp) + get_m(i, al, be) * data_.sigma_t(i, g);
+                                matrix(al, be) = get_k_l(i, al, be, m) + get_l(i, al, be, m) + get_m(i, al, be) * data_.sigma_t(i, g);
                                 
-                                sum += get_m(i, al, be) * q(i, g, na) / 2 - get_k_r(i, al, be, mp) * psi(i+1, g, 0, oa, mp);
+                                sum += get_m(i, al, be) * q(i, g, na) / 2;
+                                sum -= get_j(i, al, be, m) * psi(i, g, na, oa, p);
+                                sum -= get_k_r(i, al, be, m) * psi(i+1, g, 0, oa, m);
                             }
                         }
                         
@@ -200,8 +204,8 @@ namespace transport_ns
                     }
                 }
 
-                // cout << "*************************************************" << endl;
-                // cout << "i=" << i << " ri=" << mesh_.cell_center_position(i) << " dri=" << mesh_.cell_length(i) << " s_t=" << data_.sigma_t(i, g) << endl << endl;
+                cout << "*************************************************" << endl;
+                cout << "i=" << i << " ri=" << mesh_.cell_center_position(i) << " dri=" << mesh_.cell_length(i) << " s_t=" << data_.sigma_t(i, g) << endl << endl;
                 
                 epetra_solve(matrix_, lhs_, rhs_, total_nodes_);
                 
@@ -209,7 +213,7 @@ namespace transport_ns
                 {
                     for (unsigned o = 0; o < number_of_angular_nodes_; ++o)
                     {
-                        psi(i, g, n, o, mp) = lhs(n, o);
+                        psi(i, g, n, o, m) = lhs(n, o);
                     }
                 }
             }
@@ -223,8 +227,9 @@ namespace transport_ns
         matrix_.assign(total_nodes_ * total_nodes_, 0);
         lhs_.assign(total_nodes_, 0);
         rhs_.assign(total_nodes_, 0);
-        
-        unsigned mp = 1;
+
+        unsigned m = 0;
+        unsigned p = 1;
 
         // first cell
         for (unsigned g = 0; g < data_.number_of_groups(); ++g)
@@ -244,9 +249,11 @@ namespace transport_ns
                         {
                             unsigned al = oa + number_of_angular_nodes_ * na;
 
-                            matrix(al, be) = get_k_r(i, al, be, mp) + get_l(i, al, be, mp) + get_m(i, al, be) * data_.sigma_t(i, g);
+                            matrix(al, be) = get_k_r(i, al, be, p) + get_l(i, al, be, p) + get_m(i, al, be) * data_.sigma_t(i, g);
                                 
-                            sum += get_m(i, al, be) * q(i, g, na) / 2 - get_k_l(i, al, be, mp) * psi_boundary_sources(g, oa, mp);
+                            sum += get_m(i, al, be) * q(i, g, na) / 2;
+                            sum -= get_j(i, al, be, p) * psi(i, g, na, oa, m);
+                            sum -= get_k_l(i, al, be, p) * psi_boundary_sources(g, oa, p);
                         }
                     }
                     
@@ -260,7 +267,7 @@ namespace transport_ns
             {
                 for (unsigned o = 0; o < number_of_angular_nodes_; ++o)
                 {
-                    psi(i, g, n, o, mp) = lhs(n, o);
+                    psi(i, g, n, o, p) = lhs(n, o);
                 }
             }
         }                
@@ -284,9 +291,11 @@ namespace transport_ns
                             {
                                 unsigned al = oa + number_of_angular_nodes_ * na;
 
-                                matrix(al, be) = get_k_r(i, al, be, mp) + get_l(i, al, be, mp) + get_m(i, al, be) * data_.sigma_t(i, g);
+                                matrix(al, be) = get_k_r(i, al, be, p) + get_l(i, al, be, p) + get_m(i, al, be) * data_.sigma_t(i, g);
                                 
-                                sum += get_m(i, al, be) * q(i, g, na) / 2 - get_k_l(i, al, be, mp) * psi(i-1, g, mesh_.number_of_nodes() - 1, oa, mp);
+                                sum += get_m(i, al, be) * q(i, g, na) / 2;
+                                sum -= get_j(i, al, be, p) * psi(i, g, na, oa, m);
+                                sum -= get_k_l(i, al, be, p) * psi(i-1, g, mesh_.number_of_nodes() - 1, oa, p);
                             }
                         }
                         
@@ -294,8 +303,8 @@ namespace transport_ns
                     }
                 }
 
-                // cout << "*************************************************" << endl;
-                // cout << "i=" << i << " ri=" << mesh_.cell_center_position(i) << " dri=" << mesh_.cell_length(i) << " s_t=" << data_.sigma_t(i, g) << endl << endl;
+                cout << "*************************************************" << endl;
+                cout << "i=" << i << " ri=" << mesh_.cell_center_position(i) << " dri=" << mesh_.cell_length(i) << " s_t=" << data_.sigma_t(i, g) << endl << endl;
                 
                 epetra_solve(matrix_, lhs_, rhs_, total_nodes_);
                 
@@ -303,7 +312,7 @@ namespace transport_ns
                 {
                     for (unsigned o = 0; o < number_of_angular_nodes_; ++o)
                     {
-                        psi(i, g, n, o, mp) = lhs(n, o);
+                        psi(i, g, n, o, p) = lhs(n, o);
                     }
                 }
             }
@@ -375,8 +384,8 @@ namespace transport_ns
         
         Epetra_SerialDenseSolver solver;
         
-        // cout << epetra_matrix << endl;
-        // cout << epetra_rhs << endl;
+        cout << epetra_matrix << endl;
+        cout << epetra_rhs << endl;
         
         solver.FactorWithEquilibration(true);
         solver.SetMatrix(epetra_matrix);
@@ -386,12 +395,12 @@ namespace transport_ns
         
         lhs.assign(solver.X(), solver.X() + size);
         
-        // cout << "Solution" << endl;
-        // for (unsigned i = 0; i < 4; ++i)
-        // {
-        //     cout << lhs[i] << "    ";
-        // }
-        // cout << endl << endl;
+        cout << "Solution" << endl;
+        for (unsigned i = 0; i < 4; ++i)
+        {
+            cout << lhs[i] << "    ";
+        }
+        cout << endl << endl;
     }
     
     void FEM_Transport::
@@ -407,6 +416,39 @@ namespace transport_ns
         error_phi_old_.resize(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
         psi_boundary_sources_.resize(2 * data_.number_of_groups() * number_of_angular_nodes_, 0);
 
+        // for (unsigned mp = 0; mp < 2; ++mp)
+        // {
+        //     for (int i = mesh_.number_of_cells() - 2; i >=0; --i)
+        //     {
+        //         for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+        //         {
+        //             cout << "*************************************************" << endl;
+        //             cout << "mp=" << mp << " i=" << i << " ri=" << mesh_.cell_center_position(i) << " dri=" << mesh_.cell_length(i) << " s_t=" << data_.sigma_t(i, g) << endl << endl;
+                
+        //             for (unsigned nb = 0; nb < mesh_.number_of_nodes(); ++nb)
+        //             {
+        //                 for (unsigned ob = 0; ob < number_of_angular_nodes_; ++ob)
+        //                 {
+        //                     unsigned be = ob + number_of_angular_nodes_ * nb;
+                        
+        //                     double sum = 0;
+                        
+        //                     for (unsigned na = 0; na < mesh_.number_of_nodes(); ++na)
+        //                     {
+        //                         for (unsigned oa = 0; oa < number_of_angular_nodes_; ++oa)
+        //                         {
+        //                             unsigned al = oa + number_of_angular_nodes_ * na;
+                                
+        //                             cout << "al=" << al << " be=" << be << " j=" << get_j(i, al, be, mp) << " kr=" << get_k_r(i, al, be, mp) << " kl=" << get_k_l(i, al, be, mp) << " l=" << get_l(i, al, be, mp) << " m=" <<  get_m(i, al, be) << endl;
+        //                         }
+        //                     }
+        //                 }
+        //             }
+
+        //         }
+        //     }
+        // }
+        
         // begin iterations
         for (unsigned it = 0; it < max_iterations_; ++it)
         {
@@ -484,11 +526,22 @@ namespace transport_ns
         // print_angular_flux();
         // calculate_leakage();
     }
+
+    double FEM_Transport::
+    get_j(unsigned i, unsigned al, unsigned be, unsigned mp)
+    {
+        double t1 = - mesh_.cell_length(i) / 96;
+        double t2 = 2 * mp_coord[mp] -2 * eta_coord[be] + 2 * eta_coord[al] * (-1 + eta_coord[be] * mp_coord[mp]);
+        double t3 = mesh_.cell_length(i) * (eta_coord[al] + eta_coord[be]) + 2 * mesh_.cell_center_position(i) * (3 + xi_coord[al] * xi_coord[be]);
+
+        return t1 * t2 * t3;
+           
+    }
     
     double FEM_Transport::
     get_k_r(unsigned i, unsigned al, unsigned be, unsigned mp)
     {
-        double t1 = 1.0 / (96.0 * mesh_.cell_length(i));
+        double t1 = 1.0 / 192.0;
         double t2 = eta_coord[al] + eta_coord[be] + 3 * mp_coord[mp] + eta_coord[al] * eta_coord[be] * mp_coord[mp];
         double t3 = pow(mesh_.cell_length(i) + 2 * mesh_.cell_center_position(i), 2);
         double t4 = (xi_coord[al] + 1) * (xi_coord[be] + 1);
@@ -499,7 +552,7 @@ namespace transport_ns
     double FEM_Transport::
     get_k_l(unsigned i, unsigned al, unsigned be, unsigned mp)
     {
-        double t1 = - 1.0 / (96.0 * mesh_.cell_length(i));
+        double t1 = - 1.0 / 192.0;
         double t2 = eta_coord[al] + eta_coord[be] + 3 * mp_coord[mp] + eta_coord[al] * eta_coord[be] * mp_coord[mp];
         double t3 = pow(mesh_.cell_length(i) - 2 * mesh_.cell_center_position(i), 2);
         double t4 = (xi_coord[al] - 1) * (xi_coord[be] - 1);
@@ -510,19 +563,20 @@ namespace transport_ns
     double FEM_Transport::
     get_l(unsigned i, unsigned al, unsigned be, unsigned mp)
     {
-        double t1 = - 1.0 / 144.0;
+        double t1 = - 1.0 / 288.0;
         double t2 = eta_coord[al] + eta_coord[be] + 3 * mp_coord[mp] + eta_coord[al] * eta_coord[be] * mp_coord[mp];
-        double t3 = (pow(mesh_.cell_length(i), 2) + 12 * pow(mesh_.cell_center_position(i), 2) + 4 * mesh_.cell_length(i) * mesh_.cell_center_position(i) * xi_coord[al]) * xi_coord[be] / mesh_.cell_length(i);
-        double t4 = 2 * (eta_coord[be] + 3 * mp_coord[mp]) + eta_coord[al] * (3 * pow(mp_coord[mp], 2) + 4 * eta_coord[be] * mp_coord[mp] - 9);
-        double t5 = mesh_.cell_length(i) * (xi_coord[al] + xi_coord[be]) + 2 * mesh_.cell_center_position(i) * (3 + xi_coord[al] * xi_coord[be]);
+        double t3 = (pow(mesh_.cell_length(i), 2) + 12 * pow(mesh_.cell_center_position(i), 2) + 4 * mesh_.cell_length(i) * mesh_.cell_center_position(i) * xi_coord[al]) * xi_coord[be];
+        double t4 = mesh_.cell_length(i) / 288.0;
+        double t5 = eta_coord[be] * (-8 + 2 * eta_coord[al] * mp_coord[mp]);
+        double t6 = mesh_.cell_length(i) * (xi_coord[al] + xi_coord[be]) + 2 * mesh_.cell_center_position(i) * (3 + xi_coord[al] * xi_coord[be]);
         
-        return t1 * (t2 * t3 + t4 * t5);
+        return t1 * t2 * t3 + t4 * t5 * t6;
     }
     
     double FEM_Transport::
     get_m(unsigned i, unsigned al, unsigned be)
     {
-        double t1 = 1.0 / 720.0;
+        double t1 = mesh_.cell_length(i) / 1440.0;
         double t2 = 3 + eta_coord[al] * eta_coord[be];
         double t3 = 20 * mesh_.cell_length(i) * mesh_.cell_center_position(i) * (xi_coord[al] + xi_coord[be]) + 20 * pow(mesh_.cell_center_position(i), 2) * (3 + xi_coord[al] * xi_coord[be]) + pow(mesh_.cell_length(i), 2) * (5 + 3 * xi_coord[al] * xi_coord[be]);
         
@@ -563,8 +617,6 @@ namespace transport_ns
             {
                 for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
                 {
-                    unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
-                    
                     sum += mesh_.cell_length(i) * phi(i, g, n);
                 }
             }
@@ -576,8 +628,6 @@ namespace transport_ns
             {
                 for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
                 {
-                    unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
-                    
                     phi(i, g, n) = abs(phi(i, g, n)) / sum;
                 }
             }
