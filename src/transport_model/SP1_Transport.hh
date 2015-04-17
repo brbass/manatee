@@ -18,6 +18,7 @@
 
 #include "Data.hh"
 #include "Mesh.hh"
+#include "Transport_Model.hh"
 
 namespace transport_ns
 {
@@ -27,7 +28,7 @@ namespace transport_ns
     using namespace data_ns;
     using namespace mesh_ns;
     
-    class SP1_Transport
+    class SP1_Transport: public Transport_Model
     {
     private:
         
@@ -36,9 +37,9 @@ namespace transport_ns
         
         double tolerance = 1e-8;
         
-        Data &data_;
-        Mesh &mesh_;
-
+        Data data_;
+        Mesh mesh_;
+        
         string problem_type_;
         
         vector<double> solution_;
@@ -69,13 +70,13 @@ namespace transport_ns
         
         Teuchos::ParameterList list_;
         
-        int initialize_d();
-        int initialize_matrix();
-        int initialize_lhs();
-        int initialize_rhs();
-        int initialize_problem();
-        int initialize_solver();
-        int initialize_transport();
+        void initialize_d();
+        void initialize_matrix();
+        void initialize_lhs();
+        void initialize_rhs();
+        void initialize_problem();
+        void initialize_solver();
+        void initialize_transport();
 
         inline double d(unsigned cell, unsigned from_group, unsigned to_group)
         {
@@ -84,13 +85,22 @@ namespace transport_ns
         
     public:
         
-        SP1_Transport(Data &data,
-                      Mesh &mesh,
+        SP1_Transport(unsigned &number_of_cells,
+                      unsigned &number_of_groups,
+                      unsigned &number_of_scattering_moments,
+                      double &side_length,
+                      vector<double> &internal_source,
+                      vector<double> &boundary_sources,
+                      vector<double> &sigma_t,
+                      vector<double> &sigma_s,
+                      vector<double> &nu_sigma_f,
+                      vector<double> &chi,
+                      vector<string> &boundary_conditions,
                       string problem_type = "forward");
         
-        int solve();
+        virtual void solve();
         
-        void print_scalar_flux()
+        virtual void print_scalar_flux()
         {
             using namespace std;
 

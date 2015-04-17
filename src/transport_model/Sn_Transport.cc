@@ -14,6 +14,7 @@
 #include "Data.hh"
 #include "Mesh.hh"
 #include "Ordinates.hh"
+#include "Transport_Model.hh"
 
 namespace transport_ns
 {
@@ -22,13 +23,33 @@ namespace transport_ns
     using namespace mesh_ns;
     
     Sn_Transport::
-    Sn_Transport(Data &data,
-                 Mesh &mesh,
-                 Ordinates &ordinates)
-    :
-        data_(data),
-        mesh_(mesh),
-        ordinates_(ordinates)
+    Sn_Transport(unsigned &number_of_cells,
+                 unsigned &number_of_groups,
+                 unsigned &number_of_scattering_moments,
+                 unsigned &number_of_ordinates,
+                 double &side_length,
+                 vector<double> &internal_source,
+                 vector<double> &boundary_sources,
+                 vector<double> &sigma_t,
+                 vector<double> &sigma_s,
+                 vector<double> &nu_sigma_f,
+                 vector<double> &chi,
+                 vector<string> &boundary_conditions,
+                 string geometry):
+        Transport_Model(),
+        data_(number_of_cells,
+              number_of_groups,
+              number_of_scattering_moments,
+              internal_source,
+              boundary_sources,
+              sigma_t,
+              sigma_s,
+              nu_sigma_f,
+              chi,
+              boundary_conditions),
+        mesh_(number_of_cells,
+              side_length),
+        ordinates_(number_of_ordinates)
     {
         data_.check();
         mesh_.check();

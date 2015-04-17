@@ -5,7 +5,10 @@
 
 #include "Data.hh"
 #include "Mesh.hh"
+#include "FEM_Transport.hh"
 #include "Monte_Carlo.hh"
+#include "Sn_Transport.hh"
+#include "SP1_Transport.hh"
 #include "Transport_Model.hh"
 
 int test_homo()
@@ -48,18 +51,18 @@ int test_homo()
         }
     }
 
-    Transport_Model transport(number_of_cells,
-                              number_of_groups,
-                              number_of_scattering_moments,
-                              side_length,
-                              internal_source,
-                              boundary_sources,
-                              sigma_t,
-                              sigma_s,
-                              nu_sigma_f,
-                              chi,
-                              boundary_conditions,
-                              problem_type);
+    SP1_Transport transport(number_of_cells,
+                            number_of_groups,
+                            number_of_scattering_moments,
+                            side_length,
+                            internal_source,
+                            boundary_sources,
+                            sigma_t,
+                            sigma_s,
+                            nu_sigma_f,
+                            chi,
+                            boundary_conditions,
+                            problem_type);
     
     transport.solve();
     
@@ -116,38 +119,38 @@ int test_downscatter()
         }
     }
     
-    Transport_Model spn_transport(number_of_cells,
-                                  number_of_groups,
-                                  number_of_scattering_moments,
-                                  side_length,
-                                  internal_source,
-                                  boundary_sources,
-                                  sigma_t,
-                                  sigma_s,
-                                  nu_sigma_f,
-                                  chi,
-                                  boundary_conditions);
+    SP1_Transport sp1_transport(number_of_cells,
+                                number_of_groups,
+                                number_of_scattering_moments,
+                                side_length,
+                                internal_source,
+                                boundary_sources,
+                                sigma_t,
+                                sigma_s,
+                                nu_sigma_f,
+                                chi,
+                                boundary_conditions);
     
-    spn_transport.solve();
+    sp1_transport.solve();
     
-    spn_transport.print_scalar_flux();
+    sp1_transport.print_scalar_flux();
 
     boundary_conditions.assign(2, "vacuum");
     boundary_sources.assign(number_of_groups * number_of_ordinates * 2, 0.0);
     
-    Transport_Model sn_transport(number_of_cells,
-                             number_of_groups,
-                             number_of_scattering_moments,
-                             number_of_ordinates,
-                             side_length,
-                             internal_source,
-                             boundary_sources,
-                             sigma_t,
-                             sigma_s,
-                             nu_sigma_f,
-                             chi,
-                             boundary_conditions);
-
+    Sn_Transport sn_transport(number_of_cells,
+                              number_of_groups,
+                              number_of_scattering_moments,
+                              number_of_ordinates,
+                              side_length,
+                              internal_source,
+                              boundary_sources,
+                              sigma_t,
+                              sigma_s,
+                              nu_sigma_f,
+                              chi,
+                              boundary_conditions);
+    
     sn_transport.solve();
     
     sn_transport.print_scalar_flux();
@@ -203,18 +206,18 @@ int test_adjoint()
         }
     }
     
-    Transport_Model sp1_transport(number_of_cells,
-                                  number_of_groups,
-                                  number_of_scattering_moments,
-                                  side_length,
-                                  internal_source,
-                                  boundary_sources,
-                                  sigma_t,
-                                  sigma_s,
-                                  nu_sigma_f,
-                                  chi,
-                                  boundary_conditions,
-                                  problem_type);
+    SP1_Transport sp1_transport(number_of_cells,
+                                number_of_groups,
+                                number_of_scattering_moments,
+                                side_length,
+                                internal_source,
+                                boundary_sources,
+                                sigma_t,
+                                sigma_s,
+                                nu_sigma_f,
+                                chi,
+                                boundary_conditions,
+                                problem_type);
     
     sp1_transport.solve();
     
@@ -261,19 +264,19 @@ int test_spherical()
         }
     }
     
-    Transport_Model sn_transport(number_of_cells,
-                                 number_of_groups,
-                                 number_of_scattering_moments,
-                                 number_of_ordinates,
-                                 side_length,
-                                 internal_source,
-                                 boundary_sources,
-                                 sigma_t,
-                                 sigma_s,
-                                 nu_sigma_f,
-                                 chi,
-                                 boundary_conditions,
-                                 geometry);
+    Sn_Transport sn_transport(number_of_cells,
+                              number_of_groups,
+                              number_of_scattering_moments,
+                              number_of_ordinates,
+                              side_length,
+                              internal_source,
+                              boundary_sources,
+                              sigma_t,
+                              sigma_s,
+                              nu_sigma_f,
+                              chi,
+                              boundary_conditions,
+                              geometry);
 
     sn_transport.solve();
     //sn_transport.solve_eigenvalue();
@@ -281,20 +284,20 @@ int test_spherical()
     sn_transport.print_scalar_flux();
     //sn_transport.print_eigenvalue();
     
-    Transport_Model fem_transport(number_of_cells,
-                                  number_of_groups,
-                                  number_of_scattering_moments,
-                                  side_length,
-                                  internal_source,
-                                  boundary_sources,
-                                  sigma_t,
-                                  sigma_s,
-                                  nu_sigma_f,
-                                  chi,
-                                  boundary_conditions,
-                                  max_iterations,
-                                  tolerance,
-                                  geometry);
+    FEM_Transport fem_transport(number_of_cells,
+                                number_of_groups,
+                                number_of_scattering_moments,
+                                side_length,
+                                internal_source,
+                                boundary_sources,
+                                sigma_t,
+                                sigma_s,
+                                nu_sigma_f,
+                                chi,
+                                boundary_conditions,
+                                max_iterations,
+                                tolerance,
+                                geometry);
 
     fem_transport.solve();
     //fem_transport.solve_eigenvalue();
@@ -328,23 +331,19 @@ int test_mc()
     vector<string> boundary_conditions(2, "reflected");
     boundary_conditions[1] = "reflected";
     
-    Mesh mesh(number_of_cells,
-              side_length);
-    
-    Data data(number_of_cells,
-              number_of_groups,
-              number_of_scattering_moments,
-              internal_source,
-              boundary_sources,
-              sigma_t,
-              sigma_s,
-              nu,
-              sigma_f,
-              chi,
-              boundary_conditions);
 
-    Monte_Carlo monte_carlo(data,
-			    mesh);
+    Monte_Carlo monte_carlo(number_of_cells,
+                            number_of_groups,
+                            number_of_scattering_moments,
+                            side_length,
+                            internal_source,
+                            boundary_sources,
+                            sigma_t,
+                            sigma_s,
+                            nu,
+                            sigma_f,
+                            chi,
+                            boundary_conditions);
     
     return 0;
 }
@@ -359,7 +358,7 @@ int main(int argc, char *argv[])
     // checksum += test_downscatter();
     // checksum += test_adjoint();
     // checksum += test_spherical();
-    test_mc();
+    checksum += test_mc();
     
     //MPI_Finalize();
     

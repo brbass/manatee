@@ -29,11 +29,31 @@ namespace transport_ns
     using namespace mesh_ns;
     
     SP1_Transport::
-    SP1_Transport(Data &data,
-                  Mesh &mesh,
+    SP1_Transport(unsigned &number_of_cells,
+                  unsigned &number_of_groups,
+                  unsigned &number_of_scattering_moments,
+                  double &side_length,
+                  vector<double> &internal_source,
+                  vector<double> &boundary_sources,
+                  vector<double> &sigma_t,
+                  vector<double> &sigma_s,
+                  vector<double> &nu_sigma_f,
+                  vector<double> &chi,
+                  vector<string> &boundary_conditions,
                   string problem_type):
-        data_(data),
-        mesh_(mesh),
+        Transport_Model(),
+        data_(number_of_cells,
+              number_of_groups,
+              number_of_scattering_moments,
+              internal_source,
+              boundary_sources,
+              sigma_t,
+              sigma_s,
+              nu_sigma_f,
+              chi,
+              boundary_conditions),
+        mesh_(number_of_cells,
+              side_length),
         problem_type_(problem_type)
     {
         data_.check();
@@ -55,7 +75,7 @@ namespace transport_ns
         initialize_solver();
     }
     
-    int SP1_Transport::
+    void SP1_Transport::
     solve()
     {
         solver_->SymbolicFactorization();
@@ -65,11 +85,9 @@ namespace transport_ns
         solver_->Solve();
         
         // solver_->PrintStatus();
-
-        return 0;
     }
     
-    int SP1_Transport::
+    void SP1_Transport::
     initialize_matrix()
     {
         num_my_elements_ = map_->NumMyElements();
@@ -302,20 +320,16 @@ namespace transport_ns
         }
         
         matrix_->GlobalAssemble();
-        
-        return 0;
     }
     
-    int SP1_Transport::
+    void SP1_Transport::
     initialize_lhs()
     {
         lhs_ = unique_ptr<Epetra_Vector> (new Epetra_Vector(*map_));
         lhs_->PutScalar(1.0);
-        
-        return 0;
     }
     
-    int SP1_Transport::
+    void SP1_Transport::
     initialize_rhs()
     {
         rhs_ = unique_ptr<Epetra_Vector> (new Epetra_Vector(*map_));
@@ -352,19 +366,15 @@ namespace transport_ns
             
             (*rhs_)[k] = 4 * data_.boundary_source(1, g);
         }
-        
-        return 0;
     }
 
-    int SP1_Transport::
+    void SP1_Transport::
     initialize_problem()
     {
         problem_ = unique_ptr<Epetra_LinearProblem> (new Epetra_LinearProblem(matrix_.get(), lhs_.get(), rhs_.get()));
-        
-        return 0;
     }
 
-    int SP1_Transport::
+    void SP1_Transport::
     initialize_solver()
     {
         solver_ = unique_ptr<Amesos_BaseSolver> (factory_.Create(solver_type_, *problem_));
@@ -378,11 +388,9 @@ namespace transport_ns
         // list_.set("PrintStatus", true);
         
         solver_->SetParameters(list_);
-        
-        return 0;
     }
 
-    int SP1_Transport::
+    void SP1_Transport::
     initialize_d()
     {
         unsigned n = 0;
@@ -432,7 +440,5 @@ namespace transport_ns
                 }
             }
         }
-        
-        return 0;
     }
 }

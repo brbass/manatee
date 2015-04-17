@@ -9,6 +9,7 @@
 
 #include "Data.hh"
 #include "Mesh.hh"
+#include "Transport_Model.hh"
 
 namespace transport_ns
 {
@@ -18,7 +19,7 @@ namespace transport_ns
     using namespace data_ns;
     using namespace mesh_ns;
     
-    class FEM_Transport
+    class FEM_Transport: public Transport_Model
     {
     private:
 
@@ -36,8 +37,8 @@ namespace transport_ns
 
         void epetra_solve(vector<double> &matrix, vector<double> &lhs, vector<double> &rhs, int size);
         
-        Data &data_;
-        Mesh &mesh_;
+        Data data_;
+        Mesh mesh_;
 
         bool converged_;
         
@@ -138,18 +139,28 @@ namespace transport_ns
         
     public:
         
-        FEM_Transport(Data &data,
-                      Mesh &mesh,
-                      unsigned max_iterations,
-                      double tolerance);
+        FEM_Transport(unsigned &number_of_cells,
+                      unsigned &number_of_groups,
+                      unsigned &number_of_scattering_moments,
+                      double &side_length,
+                      vector<double> &internal_source,
+                      vector<double> &boundary_sources,
+                      vector<double> &sigma_t,
+                      vector<double> &sigma_s,
+                      vector<double> &nu_sigma_f,
+                      vector<double> &chi,
+                      vector<string> &boundary_conditions,
+                      unsigned &max_iterations,
+                      double &tolerance,
+                      string geometry);
         
-        void solve();
+        virtual void solve();
         
-        void solve_eigenvalue();
+        virtual void solve_eigenvalue();
         
         void psi_to_phi();
 
-        void print_eigenvalue()
+        virtual void print_eigenvalue()
         {
             cout << "FEM_Transport" << endl;
             
@@ -162,7 +173,7 @@ namespace transport_ns
 
         void normalize_phi();
         
-        void print_scalar_flux()
+        virtual void print_scalar_flux()
         {
             using namespace std;
 
@@ -186,7 +197,7 @@ namespace transport_ns
             cout << "iterations: " << iterations_ << endl << endl;
         }
 
-        void print_angular_flux()
+        virtual void print_angular_flux()
         {
             using namespace std;
 

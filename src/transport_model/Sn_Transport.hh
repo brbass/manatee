@@ -14,6 +14,7 @@
 #include "Data.hh"
 #include "Mesh.hh"
 #include "Ordinates.hh"
+#include "Transport_Model.hh"
 
 namespace transport_ns
 {
@@ -23,16 +24,16 @@ namespace transport_ns
     using namespace data_ns;
     using namespace mesh_ns;
     
-    class Sn_Transport
+    class Sn_Transport: public Transport_Model
     {
     private:
 
         void calculate_leakage(vector<double> &psi,
                                vector<double> &leakage);
-
+        
         void calculate_source(vector<double> &q,
                               vector<double> &phi);
-
+        
         void slab_sweep(vector<double> &psi,
                         vector<double> &q);
 
@@ -62,9 +63,9 @@ namespace transport_ns
 
         void analytic_solve(vector<double> &matrix, vector<double> &lhs, vector<double> &rhs);
         
-        Data &data_;
-        Mesh &mesh_;
-        Ordinates &ordinates_;
+        Data data_;
+        Mesh mesh_;
+        Ordinates ordinates_;
         
         unsigned max_iterations_ = 1000;
         double tolerance_ = 1e-10;
@@ -218,12 +219,22 @@ namespace transport_ns
         
     public:
         
-        Sn_Transport(Data &data,
-                     Mesh &mesh,
-                     Ordinates &ordinates);
+        Sn_Transport(unsigned &number_of_cells,
+                     unsigned &number_of_groups,
+                     unsigned &number_of_scattering_moments,
+                     unsigned &number_of_ordinates,
+                     double &side_length,
+                     vector<double> &internal_source,
+                     vector<double> &boundary_sources,
+                     vector<double> &sigma_t,
+                     vector<double> &sigma_s,
+                     vector<double> &nu_sigma_f,
+                     vector<double> &chi,
+                     vector<string> &boundary_conditions,
+                     string geometry = "slab");
         
-        void solve();
-        void solve_eigenvalue();
+        virtual void solve();
+        virtual void solve_eigenvalue();
         
         void psi_to_phi(vector<double> &phi,
                         vector<double> &psi);
@@ -232,7 +243,7 @@ namespace transport_ns
                              vector<double> &psi,
                              unsigned o);
 
-        void print_eigenvalue()
+        virtual void print_eigenvalue()
         {
             cout << "Sn_Transport" << endl;
 
@@ -241,7 +252,7 @@ namespace transport_ns
             cout << "iterations: " << iterations_ << endl << endl;
         }
         
-        void print_scalar_flux()
+        virtual void print_scalar_flux()
         {
             using namespace std;
 
@@ -267,7 +278,7 @@ namespace transport_ns
             cout << "iterations: " << iterations_ << endl << endl;
         }
 
-        void print_angular_flux(vector<double> &psi)
+        virtual void print_angular_flux(vector<double> &psi)
         {
             using namespace std;
 

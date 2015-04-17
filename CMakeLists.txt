@@ -39,7 +39,7 @@ ELSE()
         MESSAGE(FATAL_ERROR "Could not find Trilinos!")
 ENDIF()
 
-set(manatee_src src/data/Data.cc src/mesh/Finite_Element.cc src/mesh/Mesh.cc src/monte_carlo/Monte_Carlo.cc src/parser/Parser.cc src/transport_model/Gauss_Legendre.cc src/transport_model/Ordinates.cc src/transport_model/FEM_Transport.cc src/transport_model/SP1_Transport.cc src/transport_model/SPn_Transport.cc src/transport_model/Sn_Transport.cc src/transport_model/Transport_Model.cc)
+set(manatee_src src/data/Data.cc src/mesh/Finite_Element.cc src/mesh/Mesh.cc src/monte_carlo/Monte_Carlo.cc src/parser/Parser.cc src/transport_model/Gauss_Legendre.cc src/transport_model/Ordinates.cc src/transport_model/FEM_Transport.cc src/transport_model/SP1_Transport.cc #[[src/transport_model/SPn_Transport.cc]] src/transport_model/Sn_Transport.cc src/transport_model/Transport_Model.cc)
 set(manatee_main src/manatee/Manatee.cc)
 set(manatee_test test/tst_Manatee.cc)
 

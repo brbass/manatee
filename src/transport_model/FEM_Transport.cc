@@ -19,13 +19,34 @@ namespace transport_ns
     using namespace mesh_ns;
     
     FEM_Transport::
-    FEM_Transport(Data &data,
-                  Mesh &mesh,
-                  unsigned max_iterations,
-                  double tolerance)
-    :
-        data_(data),
-        mesh_(mesh),
+    FEM_Transport(unsigned &number_of_cells,
+                  unsigned &number_of_groups,
+                  unsigned &number_of_scattering_moments,
+                  double &side_length,
+                  vector<double> &internal_source,
+                  vector<double> &boundary_sources,
+                  vector<double> &sigma_t,
+                  vector<double> &sigma_s,
+                  vector<double> &nu_sigma_f,
+                  vector<double> &chi,
+                  vector<string> &boundary_conditions,
+                  unsigned &max_iterations,
+                  double &tolerance,
+                  string geometry):
+        Transport_Model(),
+        data_(number_of_cells,
+              number_of_groups,
+              number_of_scattering_moments,
+              internal_source,
+              boundary_sources,
+              sigma_t,
+              sigma_s,
+              nu_sigma_f,
+              chi,
+              boundary_conditions),
+        mesh_(number_of_cells,
+              side_length,
+              geometry),
         max_iterations_(max_iterations),
         tolerance_(tolerance)
     {

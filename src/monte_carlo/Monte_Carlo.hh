@@ -15,8 +15,18 @@ namespace monte_carlo_ns
     {   
     public:
     
-        Monte_Carlo(Data &data,
-                    Mesh &mesh);
+    Monte_Carlo(unsigned &number_of_cells,
+                unsigned &number_of_groups,
+                unsigned &number_of_scattering_moments,
+                double &side_length,
+                vector<double> &internal_source,
+                vector<double> &boundary_sources,
+                vector<double> &sigma_t,
+                vector<double> &sigma_s,
+                vector<double> &nu,
+                vector<double> &sigma_f,
+                vector<double> &chi,
+                vector<string> boundary_conditions);
         
     private:
 
@@ -28,8 +38,8 @@ namespace monte_carlo_ns
             LEAKAGE
         };
         
-        Data &data_;
-        Mesh &mesh_;
+        Data data_;
+        Mesh mesh_;
         
         std::mt19937 generator_;
         std::uniform_real_distribution<double> distribution_;

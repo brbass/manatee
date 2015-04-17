@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     
     string input_folder = argv[1];
     
-    Transport_Model transport_model(input_folder);
+    Transport_Model transport_model;
 
     //MPI_Finalize();
 }
