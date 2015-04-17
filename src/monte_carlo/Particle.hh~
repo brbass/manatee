@@ -1,0 +1,14 @@
+#ifndef Particle_hh
+#define Particle_hh
+
+namespace monte_carlo_ns
+{
+    class Particle
+    {
+        Particle();
+
+        
+    };
+}
+
+#endif

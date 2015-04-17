@@ -20,6 +20,7 @@ namespace mesh_ns
     
         unsigned number_of_cells_;
         unsigned number_of_nodes_ = 2;
+        unsigned side_length_;
         string geometry_;
         
         vector<Finite_Element> elements_;
@@ -71,6 +72,11 @@ namespace mesh_ns
         inline bool geometry(string test)
         {
             return geometry_.compare(test) == 0;
+        }
+
+        inline double side_length()
+        {
+            return side_length_;
         }
     };
 }

@@ -16,7 +16,7 @@ namespace monte_carlo_ns
     Monte_Carlo::
     Monte_Carlo(Data &data,
                 Mesh &mesh)
-    :
+        :
         data_(data),
         mesh_(mesh),
 	distribution_(0.0, 1.0)
@@ -24,5 +24,4 @@ namespace monte_carlo_ns
         data_.check();
         mesh_.check();
     }
-    
 }

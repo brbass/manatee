@@ -1,3 +1,6 @@
+#ifndef Monte_Carlo_hh
+#define Monte_Carlo_hh
+
 #include <random>
 
 #include "Data.hh"
@@ -17,15 +20,31 @@ namespace monte_carlo_ns
         
     private:
 
+        enum reaction
+        {
+            ABSORPTION,
+            SCATTERING,
+            FISSION,
+            LEAKAGE
+        };
+        
         Data &data_;
         Mesh &mesh_;
-
+        
         std::mt19937 generator_;
         std::uniform_real_distribution<double> distribution_;
-
+        
         inline double get_rand()
         {
-	     return distribution_(generator_);
+            return distribution_(generator_);
         }
+
+        double sample_source();
+        
+        double sample_reaction();
+        
+        
     };
 }
+
+#endif

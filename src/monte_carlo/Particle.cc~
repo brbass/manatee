@@ -1,0 +1,10 @@
+#include "Monte_Carlo.hh"
+
+namespace monte_carlo_ns
+{
+    Particle::
+    Particle()
+    {
+        
+    }
+}
