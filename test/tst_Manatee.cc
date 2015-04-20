@@ -314,7 +314,7 @@ int test_mc()
     
     unsigned number_of_cells = 10;
     unsigned number_of_groups = 1;
-    unsigned number_of_scattering_moments = 1;
+    unsigned number_of_scattering_moments = 2;
     
     
     double side_length = 10;//22.017156;
