@@ -1,5 +1,6 @@
 #include "Monte_Carlo.hh"
 
+#include <ctime>
 #include <iostream>
 #include <random>
 #include <string>
@@ -57,6 +58,8 @@ namespace monte_carlo_ns
         compute_source_distribution();
         
         initialize_weight_windows();
+
+        generator_.seed(time(nullptr));
         
         // check whether condition sigma_s0 >= 3 * sigma_s1 and sigma_s1 > 0
         // if (data_.number_of_scattering_moments() == 2)
@@ -119,7 +122,7 @@ namespace monte_carlo_ns
                                        birth_weight_,
                                        position,
                                        get_isotropic_angle());
-
+                    
                     //total_birth_weight_ += weight_windows(i, g).ideal;
                     // if (position < mesh_.cell_edge_position(i, 0) || position > mesh_.cell_edge_position(i, 1))
                     // {
@@ -144,30 +147,22 @@ namespace monte_carlo_ns
     void Monte_Carlo::
     solve()
     {
-
         for (unsigned h = 0; h < number_of_histories_; ++h)
         {
             get_source_particle();
 
             estimators_.begin_history();
 
-            //unsigned part = 0;
-
             while(bank_.particles_remain())
             {
                 Particle particle = bank_.get_particle();
-                int last_event = 0;
-                // part += 1;
-                // bool found = false;
-                
-                // if ((particle.position() < mesh_.cell_edge_position(particle.cell(), 0) || particle.position() > mesh_.cell_edge_position(particle.cell(), 1)) && !found)
-                // {
-                //     cout << "b" << part;
-                //     cout << "  left: " << mesh_.cell_edge_position(particle.cell(), 0);
-                //     cout << "  right: " << mesh_.cell_edge_position(particle.cell(), 1);
-                //     cout << "  position: " << particle.position() << endl;
-                //     found = true;
-                // }
+
+                if (particle.position() < mesh_.cell_edge_position(particle.cell(), 0) || particle.position() > mesh_.cell_edge_position(particle.cell(), 1))
+                {
+                    cout << "left: " << mesh_.cell_edge_position(particle.cell(), 0);
+                    cout << "  right: " << mesh_.cell_edge_position(particle.cell(), 1);
+                    cout << "  position: " << particle.position() << endl;
+                }
                 
                 // check_weight_windows(particle); 
 
@@ -204,10 +199,9 @@ namespace monte_carlo_ns
                     }
                 }
             }
-            
             estimators_.end_history();
         }
-
+        
         vector<double> cell_volume(mesh_.number_of_cells());
 
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
@@ -364,12 +358,12 @@ namespace monte_carlo_ns
         if (distance > boundary_distance) // cross cell boundary
         {
             mfp -= boundary_distance * data_.sigma_t(particle.cell(), particle.group());
-
+            
             estimators_.add_track(particle.cell(),
                                   particle.group(),
                                   particle.weight(),
                                   boundary_distance);
-
+            
             estimators_.add_crossing(particle.cell(),
                                      particle.group(),
                                      particle.weight(),
@@ -382,7 +376,7 @@ namespace monte_carlo_ns
                 if (data_.boundary_condition(0).compare("reflected") == 0)
                 {
                     particle.angle() = - particle.angle();
-
+                    
                     estimators_.add_crossing(particle.cell(),
                                              particle.group(),
                                              particle.weight(),
@@ -423,7 +417,7 @@ namespace monte_carlo_ns
     {
         double distance = mfp / data_.sigma_t(particle.cell(), particle.group());
         double boundary_distance = distance_to_boundary(particle.cell(), particle.position(), particle.angle());
-
+        
         if (distance > boundary_distance) // cross cell boundary
         {
             mfp -= boundary_distance * data_.sigma_t(particle.cell(), particle.group());
@@ -473,10 +467,10 @@ namespace monte_carlo_ns
                                   particle.group(),
                                   particle.weight(),
                                   distance);
-
+            
             mfp = 0;
             
-            particle.position() += boundary_distance * particle.angle();
+            particle.position() += distance * particle.angle();
         }
     }
 
