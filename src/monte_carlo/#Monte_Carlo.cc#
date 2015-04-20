@@ -119,7 +119,7 @@ namespace monte_carlo_ns
                                        birth_weight_,
                                        position,
                                        get_isotropic_angle());
-
+                    
                     //total_birth_weight_ += weight_windows(i, g).ideal;
                     // if (position < mesh_.cell_edge_position(i, 0) || position > mesh_.cell_edge_position(i, 1))
                     // {

@@ -127,6 +127,11 @@ namespace monte_carlo_ns
               double weight,
               double length)
     {
+        // if (weight * length < 0)
+        // {
+        //     cout << "track: " << length << endl;
+        // }
+        
         volume_flux_.history_[group + number_of_groups_ * cell] += weight * length;
     }
 

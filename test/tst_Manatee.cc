@@ -314,14 +314,14 @@ int test_mc()
     
     unsigned number_of_cells = 10;
     unsigned number_of_groups = 1;
-    unsigned number_of_scattering_moments = 2;
+    unsigned number_of_scattering_moments = 1;
     unsigned number_of_ordinates = 8;
     
     double side_length = 1;//22.017156;
     vector<double> internal_source(number_of_cells * number_of_groups, 1.0);
     vector<double> boundary_sources(number_of_groups * number_of_ordinates * 2, 0.0);
     vector<double> sigma_t(number_of_cells * number_of_groups, 1.0);
-    vector<double> sigma_s(number_of_cells * number_of_groups * number_of_groups * number_of_scattering_moments, 0);
+    vector<double> sigma_s(number_of_cells * number_of_groups * number_of_groups * number_of_scattering_moments, 0.0*0.5);
 
     for (unsigned i = 0; i < number_of_cells; ++i)
     {
@@ -334,14 +334,14 @@ int test_mc()
                 m = 1;
                 unsigned k1 = gf + number_of_groups * (gt + number_of_groups * (i + number_of_cells * m));
                 
-                sigma_s[k0] = 0.5 / number_of_groups;
-                sigma_s[k1] = 0.0;//0.1 / number_of_groups;
+                sigma_s[k0] = 0.4 / number_of_groups;
+                //sigma_s[k1] = 0.1 / number_of_groups;
             }
         }
     }
     
-    vector<double> nu(number_of_cells * number_of_groups, 1.70);
-    vector<double> sigma_f(number_of_cells * number_of_groups, 0.054628);
+    vector<double> nu(number_of_cells * number_of_groups, 2.0);
+    vector<double> sigma_f(number_of_cells * number_of_groups, 0.0*0.1);
     vector<double> chi(number_of_cells * number_of_groups, 1.0 / number_of_groups);
     vector<string> boundary_conditions(2, "reflected");
     
