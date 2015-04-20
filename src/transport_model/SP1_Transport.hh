@@ -63,6 +63,7 @@ namespace transport_ns
         unique_ptr<Epetra_LinearProblem> problem_;
         
         vector<double> d_;
+        vector<double> phi_;
         
         string solver_type_ = "Klu";
         unique_ptr<Amesos_BaseSolver> solver_;
@@ -77,6 +78,8 @@ namespace transport_ns
         void initialize_problem();
         void initialize_solver();
         void initialize_transport();
+
+        void transfer_scalar_flux();
 
         inline double d(unsigned cell, unsigned from_group, unsigned to_group)
         {
@@ -133,6 +136,11 @@ namespace transport_ns
             }
 
             cout << endl;
+        }
+
+        vector<double> get_scalar_flux()
+        {
+            return phi_;
         }
     };
 }

@@ -85,6 +85,8 @@ namespace transport_ns
         solver_->Solve();
         
         // solver_->PrintStatus();
+
+        transfer_scalar_flux();
     }
     
     void SP1_Transport::
@@ -437,6 +439,26 @@ namespace transport_ns
                     unsigned k = gf + data_.number_of_groups() * (gt + data_.number_of_groups() * i);
 
                     d_[k] = pow(n+1, 2) / ((2*n+1) * (2*n+3)) * invert_matrix(gf, gt);
+                }
+            }
+        }
+    }
+
+    void SP1_Transport::
+    transfer_scalar_flux()
+    {
+        phi_.resize(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes());
+        
+        for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+        {
+            for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            {
+                for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
+                {
+                    unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
+                    unsigned k2 = i + n + number_of_edges_ * g;
+                    
+                    phi_[k1] = (*lhs_)[k2];
                 }
             }
         }

@@ -28,7 +28,7 @@ namespace mesh_ns
         int check_size(unsigned vector_size, unsigned expected_size, string vector_name);
         
     public:
-    
+        
         Mesh(unsigned &number_of_cells,
              double &side_length,
              string geometry = "slab");

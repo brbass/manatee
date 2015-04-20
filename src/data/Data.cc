@@ -60,6 +60,29 @@ namespace data_ns
         boundary_conditions_(boundary_conditions)
     {
         check();
+        
+        calc_sigma_a();
+    }
+    
+    void Data::
+    calc_sigma_a()
+    {
+        sigma_a_.resize(number_of_cells_ * number_of_groups_);
+        
+        for (unsigned i = 0; i < number_of_cells_; ++i)
+        {
+            for (unsigned g = 0; g < number_of_groups_; ++g)
+            {
+                double sum = sigma_t(i, g) - sigma_f(i, g);
+                
+                for (unsigned g1 = 0; g1 < number_of_groups_; ++g1)
+                {
+                    sum -= sigma_s(i, g, g1, 0);
+                }
+                
+                sigma_a_[g + number_of_groups_ * i] = sum;
+            }
+        }
     }
     
     int Data::

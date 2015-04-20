@@ -20,6 +20,7 @@ namespace data_ns
         vector<double> &internal_source_;
         vector<double> &boundary_sources_;
         vector<double> &sigma_t_;
+        vector<double> sigma_a_;
         vector<double> &sigma_s_;
         vector<double> nu_;
         vector<double> &sigma_f_;
@@ -30,6 +31,8 @@ namespace data_ns
 
         int check_size(unsigned vector_size, unsigned expected_size, string vector_name);
 
+        void calc_sigma_a();
+        
     public:
         
         Data(unsigned &number_of_cells,
@@ -82,7 +85,12 @@ namespace data_ns
         {
             return sigma_t_[group + number_of_groups_ * cell];
         }
-    
+
+        inline double sigma_a(unsigned cell, unsigned group)
+        {
+            return sigma_a_[group + number_of_groups_ * cell];
+        }
+        
         inline double sigma_s(unsigned cell, unsigned from_group, unsigned to_group, unsigned moment = 0)
         {
             return sigma_s_[from_group + number_of_groups_ * (to_group + number_of_groups_ * (cell + number_of_cells_ * moment))];
@@ -92,7 +100,17 @@ namespace data_ns
         {
             return nu_[from_group + number_of_groups_ * cell] * sigma_f_[from_group + number_of_groups_ * cell];
         }
-            
+
+        inline double sigma_f(unsigned cell, unsigned from_group)
+        {
+            return sigma_f_[from_group + number_of_groups_ * cell];
+        }
+        
+        inline double nu(unsigned cell, unsigned from_group)
+        {
+            return nu_[from_group + number_of_groups_ * cell];
+        }
+
         inline double chi(unsigned cell, unsigned to_group)
         {
             return chi_[to_group * number_of_groups_ * cell];

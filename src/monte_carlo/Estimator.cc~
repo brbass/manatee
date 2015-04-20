@@ -1,0 +1,6 @@
+#include "Estimator.hh"
+
+namespace monte_carlo_ns
+{
+    
+}
