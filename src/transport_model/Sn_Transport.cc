@@ -48,7 +48,8 @@ namespace transport_ns
               chi,
               boundary_conditions),
         mesh_(number_of_cells,
-              side_length),
+              side_length,
+              geometry),
         ordinates_(number_of_ordinates)
     {
         data_.check();
@@ -70,8 +71,8 @@ namespace transport_ns
                     for (unsigned g2 = 0; g2 < data_.number_of_groups(); ++g2)
                     {
                         unsigned k3 = n + mesh_.number_of_nodes() * (g2 + data_.number_of_groups() * i);
-                        
-                        sum += (data_.chi(i, g) * data_.nu_sigma_f(i, g2) + data_.sigma_s(i, g2, g)) * phi[k3];
+
+                        sum += (data_.chi(i, g) * data_.nu_sigma_f(i, g2) / k_eigenvalue_ + data_.sigma_s(i, g2, g)) * phi[k3];
                     }
                     unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
                     
@@ -559,6 +560,27 @@ namespace transport_ns
             }
         }
     }
+
+    void Sn_Transport::
+    check_convergence(bool &converged,
+                      double &k,
+                      double &k_old,
+                      double &error_k,
+                      double &error_k_old)
+    {
+        error_k_old = error_k;
+        
+        error_k = abs(k - k_old);
+
+        if (error_k > tolerance_) //* (1 - error_k / error_k_old))
+        {
+            converged = false;
+        }
+        else
+        {
+            converged = true;
+        }
+    }
     
     void Sn_Transport::
     check_convergence(bool &converged,
@@ -612,230 +634,179 @@ namespace transport_ns
     {
         using namespace std;
 
+        enum class Geometry
+        {
+            SLAB,
+            SPHERICAL,
+            UNDEFINED
+        };
+
+        Geometry geometry = Geometry::UNDEFINED;
+        
         if (mesh_.geometry("slab"))
         {
-            // temporary variables
-            vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
-            vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
-            vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
-            vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
-            vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
-            vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
-            bool converged = false;
-            
-            // begin iterations
-            for (unsigned it = 0; it < max_iterations_; ++it)
-            {
-                calculate_source(q,
-                                 phi);
-                
-                slab_sweep(psi,
-                           q);
-                
-                phi_old = phi;
-                
-                psi_to_phi(phi,
-                           psi);
-                
-                check_convergence(converged,
-                                  phi,
-                                  phi_old,
-                                  error_phi,
-                                  error_phi_old);
-                
-                if (converged)
-                {
-                    iterations_ = it + 1;
-                    phi_ = phi;
-                    break;
-                }
-                else if (it==max_iterations_ - 1)
-                {
-                    iterations_ = it + 1;
-                    phi_ = phi;
-                }
-            }
-            // calculate_leakage(psi,
-            //                   leakage);
+            geometry = Geometry::SLAB;
         }
         else if (mesh_.geometry("spherical"))
         {
-            // temporary variables
-            vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
-            vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
-            vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
-            vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
-            vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
-            vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            geometry = Geometry::SPHERICAL;
+        }
+        
+        // temporary variables
+        vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
+        vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
+        vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
+        vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
+        vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+        vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+        bool converged = false;
             
-            bool converged = false;
-            
-            // begin iterations
-            for (unsigned it = 0; it < max_iterations_; ++it)
-            {
-                calculate_source(q,
-                                 phi);
+        // begin iterations
+        for (unsigned it = 0; it < max_iterations_; ++it)
+        {
+            calculate_source(q,
+                             phi);
                 
+            if (geometry == Geometry::SLAB)
+            {
+                slab_sweep(psi,
+                           q);
+            }
+            else if (geometry == Geometry::SPHERICAL)
+            {
                 spherical_sweep(psi,
                                 q);
-                
-                phi_old = phi;
-                
-                psi_to_phi(phi,
-                           psi);
-                
-                check_convergence(converged,
-                                  phi,
-                                  phi_old,
-                                  error_phi,
-                                  error_phi_old);
-                
-                if (converged)
-                {
-                    iterations_ = it + 1;
-                    phi_ = phi;
-                    break;
-                }
-                else if (it==max_iterations_ - 1)
-                {
-                    iterations_ = it + 1;
-                    phi_ = phi;
-                }
             }
-
-            // print_scalar_flux();
-            // print_angular_flux(psi);
-            // calculate_leakage(psi,
-            //                   leakage);
+            else
+            {
+                cerr << "geometry not found" << endl;
+            }
+                
+            phi_old = phi;
+                
+            psi_to_phi(phi,
+                       psi);
+                
+            check_convergence(converged,
+                              phi,
+                              phi_old,
+                              error_phi,
+                              error_phi_old);
+                
+            if (converged)
+            {
+                iterations_ = it + 1;
+                phi_ = phi;
+                break;
+            }
+            else if (it==max_iterations_ - 1)
+            {
+                iterations_ = it + 1;
+                phi_ = phi;
+            }
         }
+        // calculate_leakage(psi,
+        //                   leakage);
     }
-
+    
     void Sn_Transport::
     solve_eigenvalue()
     {
         using namespace std;
 
+        enum class Geometry
+        {
+            SLAB,
+            SPHERICAL,
+            UNDEFINED
+        };
+
+        Geometry geometry = Geometry::UNDEFINED;
+        
         if (mesh_.geometry("slab"))
         {
-            // temporary variables
-            vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
-            vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
-            vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
-            vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
-            vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
-            vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
-            
-            bool converged = false;
-
-            double k_eigenvalue = 1.0;
-            double k_eigenvalue_old = 1.0;
-            
-            // begin iterations
-            for (unsigned it = 0; it < max_iterations_; ++it)
-            {
-                calculate_source(q,
-                                 phi);
-                
-                slab_sweep(psi,
-                           q);
-                
-                phi_old = phi;
-                
-                psi_to_phi(phi,
-                           psi);
-
-                calculate_k(k_eigenvalue,
-                            k_eigenvalue_old,
-                            phi,
-                            phi_old);
-                
-                normalize_phi(phi);
-                
-                check_convergence(converged,
-                                  phi,
-                                  phi_old,
-                                  error_phi,
-                                  error_phi_old);
-                
-                if (converged)
-                {
-                    iterations_ = it + 1;
-                    k_eigenvalue_ = k_eigenvalue;
-                    phi_ = phi;
-                    
-                    break;
-                }
-                else if (it==max_iterations_ - 1)
-                {
-                    iterations_ = it + 1;
-                    k_eigenvalue_ = k_eigenvalue;
-                    phi_ = phi;
-                }
-            }
-            // calculate_leakage(psi,
-            //                   leakage);
+            geometry = Geometry::SLAB;
         }
         else if (mesh_.geometry("spherical"))
         {
-            // temporary variables
-            vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
-            vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
-            vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
-            vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
-            vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
-            vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            geometry = Geometry::SPHERICAL;
+        }
             
-            bool converged = false;
+        // temporary variables
+        vector<double> psi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes() * ordinates_.number_of_ordinates(), 0);
+        vector<double> phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1); // average scalar flux
+        vector<double> phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // average scalar flux from previous iteration
+        vector<double> q(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 0); // total source, including fission and scattering
+        // vector<double> error_phi(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+        // vector<double> error_phi_old(mesh_.number_of_cells() * data_.number_of_groups() * mesh_.number_of_nodes(), 1);
+            
+        bool converged = false;
 
-            double k_eigenvalue = 1.0;
-            double k_eigenvalue_old = 1.0;
+        double k_eigenvalue = 1.0;
+        double k_eigenvalue_old = 1.0;
+        double error_k_eigenvalue = 1.0;
+        double error_k_eigenvalue_old = 1.0;
             
-            // begin iterations
-            for (unsigned it = 0; it < max_iterations_; ++it)
+        // begin iterations
+        for (unsigned it = 0; it < max_iterations_; ++it)
+        {
+            k_eigenvalue_ = k_eigenvalue;
+            
+            calculate_source(q,
+                             phi);
+
+            if (geometry == Geometry::SLAB)
             {
-                calculate_source(q,
-                                 phi);
-                
+                slab_sweep(psi,
+                           q);
+            }
+            else if (geometry == Geometry::SPHERICAL)
+            {
                 spherical_sweep(psi,
                                 q);
-                
-                phi_old = phi;
-                psi_to_phi(phi,
-                           psi);
-
-                // k_eigenvalue_old = k_eigenvalue;
-                calculate_k(k_eigenvalue,
-                            k_eigenvalue_old,
-                            phi,
-                            phi_old);
-
-                normalize_phi(phi);
-                
-                check_convergence(converged,
-                                  phi,
-                                  phi_old,
-                                  error_phi,
-                                  error_phi_old);
-                
-                if (converged)
-                {
-                    iterations_ = it + 1;
-                    k_eigenvalue_ = k_eigenvalue;
-                    phi_ = phi;
-                    break;
-                }
-                else if (it==max_iterations_ - 1)
-                {
-                    iterations_ = it + 1;
-                    k_eigenvalue_ = k_eigenvalue;
-                    phi_ = phi;
-                }
             }
-
-            // print_scalar_flux();
-            // print_angular_flux(psi);
-            // calculate_leakage(psi,
-            //                   leakage);
+            else
+            {
+                cerr << "geometry not found" << endl;
+            }
+            
+            phi_old = phi;
+            
+            psi_to_phi(phi,
+                       psi);
+            
+            calculate_k(k_eigenvalue,
+                        k_eigenvalue_old,
+                        phi,
+                        phi_old);
+                
+            normalize_phi(phi);
+                
+            // check_convergence(converged,
+            //                   phi,
+            //                   phi_old,
+            //                   error_phi,
+            //                   error_phi_old);
+            check_convergence(converged,
+                              k_eigenvalue,
+                              k_eigenvalue_old,
+                              error_k_eigenvalue,
+                              error_k_eigenvalue_old);
+                
+            if (converged)
+            {
+                iterations_ = it + 1;
+                k_eigenvalue_ = k_eigenvalue;
+                phi_ = phi;
+                    
+                break;
+            }
+            else if (it==max_iterations_ - 1)
+            {
+                iterations_ = it + 1;
+                k_eigenvalue_ = k_eigenvalue;
+                phi_ = phi;
+            }
         }
     }
 
@@ -847,6 +818,8 @@ namespace transport_ns
     {
         double num = 0;
         double den = 0;
+
+        k_old = k;
         
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
@@ -861,10 +834,10 @@ namespace transport_ns
                 }
             }
         }
-
-        k = /*k_old **/ num / den;
+        
+        k = k_old * num / den;
     }
-
+    
     void Sn_Transport::
     normalize_phi(vector<double> &phi)
     {
@@ -890,7 +863,7 @@ namespace transport_ns
                 for (unsigned n = 0; n < mesh_.number_of_nodes(); ++n)
                 {
                     unsigned k1 = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
-
+                    
                     phi[k1] /= sum;
                 }
             }

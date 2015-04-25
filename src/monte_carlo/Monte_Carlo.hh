@@ -33,7 +33,7 @@ namespace monte_carlo_ns
         unsigned number_of_histories_;
         
         double total_source_;
-        double total_birth_weight_ = 0.0;
+        // double total_birth_weight_ = 0.0;
         double birth_weight_ = 1.0;
         double upper_over_lower_ = 4.0;
         double ideal_over_lower_ = 2.0;

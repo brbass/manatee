@@ -1,5 +1,6 @@
 #include "Monte_Carlo.hh"
 
+#include <cmath>
 #include <ctime>
 #include <iostream>
 #include <random>
@@ -532,7 +533,7 @@ namespace monte_carlo_ns
     initialize_weight_windows(vector<double> &phi_adjoint)
     {
         weight_windows_.resize(mesh_.number_of_cells() * data_.number_of_groups());
-
+        
         if (phi_adjoint.size() != mesh_.number_of_cells() * mesh_.number_of_nodes() * data_.number_of_groups())
         {
             cerr << "phi adjoint is incorrect size" << endl;
@@ -550,7 +551,7 @@ namespace monte_carlo_ns
                 {
                     unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * i);
 
-                    sum += phi_adjoint[k];
+                    sum += abs(phi_adjoint[k]);
                 }
                     
                 unsigned k = g + data_.number_of_groups() * i;
@@ -560,15 +561,18 @@ namespace monte_carlo_ns
         }
 
         double response = 0;
+        double phi_average = 0;
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
             for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
                 unsigned k = g + data_.number_of_groups() * i;
 
-                response += phi[k] * mesh_.cell_length(i) * data_.sigma_t(i, g); 
+                // response += phi[k] * mesh_.cell_length(i) * data_.sigma_t(i, g);
+                phi_average += phi[k] * mesh_.cell_length(i);
             }
         }
+        phi_average /= mesh_.side_length();
         
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {

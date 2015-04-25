@@ -42,6 +42,8 @@ ENDIF()
 set(manatee_src src/data/Data.cc src/mesh/Finite_Element.cc src/mesh/Mesh.cc src/monte_carlo/Bank.cc src/monte_carlo/Estimators.cc src/monte_carlo/Monte_Carlo.cc src/monte_carlo/Particle.cc src/parser/Parser.cc src/transport_model/Gauss_Legendre.cc src/transport_model/Ordinates.cc src/transport_model/FEM_Transport.cc src/transport_model/SP1_Transport.cc #[[src/transport_model/SPn_Transport.cc]] src/transport_model/Sn_Transport.cc src/transport_model/Transport_Model.cc)
 set(manatee_main src/manatee/Manatee.cc)
 set(manatee_test test/tst_Manatee.cc)
+set(proj_544 proj/proj_544.cc)
+set(proj_561 proj/proj_561.cc)
 
 #include_directories(${MPI_INCLUDE_PATH})
 include_directories(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
@@ -49,15 +51,19 @@ include_directories(src/data src/mesh src/monte_carlo src/parser src/transport_m
 
 link_directories(${Trilinos_LIBRARY_DIRS} ${Trilinos_TPL_LIBRARY_DIRS})
 
-add_executable(manatee ${manatee_src} ${manatee_main})
+#add_executable(manatee ${manatee_src} ${manatee_main})
 add_executable(tst_manatee ${manatee_src} ${manatee_test})
+add_executable(proj_544 ${manatee_src} ${proj_544})
+add_executable(proj_561 ${manatee_src} ${proj_561})
 
 add_test(test_manateee tst_manatee)
 
 #target_link_libraries(manatee ${MPI_LIBRARIES})
 #target_link_libraries(tst_manatee ${MPI_LIBRARIES})
-target_link_libraries(manatee ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
+#target_link_libraries(manatee ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
 target_link_libraries(tst_manatee ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
+target_link_libraries(proj_544 ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
+target_link_libraries(proj_561 ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES})
 
-install(TARGETS manatee DESTINATION .)
-install(TARGETS tst_manatee DESTINATION .)
+#install(TARGETS manatee DESTINATION .)
+#install(TARGETS tst_manatee DESTINATION .)

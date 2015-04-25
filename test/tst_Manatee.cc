@@ -228,23 +228,23 @@ int test_spherical()
     using namespace std;
     using namespace transport_ns;
     
-    unsigned number_of_cells = 3;
+    unsigned number_of_cells = 5;
     unsigned number_of_groups = 1;
     unsigned number_of_scattering_moments = 1;
-    unsigned number_of_ordinates = 8;
+    unsigned number_of_ordinates = 32;
     
-    unsigned max_iterations = 2;
+    unsigned max_iterations = 10000;
     double tolerance = 1e-10;
     
-    double side_length = 1;//22.017156;
-    vector<double> internal_source(number_of_cells * number_of_groups, 1.0);
+    double side_length = 22.017156;
+    vector<double> internal_source(number_of_cells * number_of_groups, 0.0);
     vector<double> boundary_sources(number_of_groups * number_of_ordinates * 2, 0.0);
     vector<double> sigma_t(number_of_cells * number_of_groups, 0.54628);
-    vector<double> sigma_s(number_of_cells * number_of_groups * number_of_groups * number_of_scattering_moments, 0 * 0.464338);
+    vector<double> sigma_s(number_of_cells * number_of_groups * number_of_groups * number_of_scattering_moments, 0.464338);
     vector<double> nu_sigma_f(number_of_cells * number_of_groups, 1.70*0.054628);
     vector<double> chi(number_of_cells * number_of_groups, 1.0);
     vector<string> boundary_conditions(2, "reflected");
-    boundary_conditions[1] = "reflected";
+    boundary_conditions[1] = "vacuum";
     string geometry = "spherical";
     
     for (unsigned i = 0; i < number_of_cells; ++i)
@@ -273,32 +273,32 @@ int test_spherical()
                               chi,
                               boundary_conditions,
                               geometry);
-
-    sn_transport.solve();
-    //sn_transport.solve_eigenvalue();
-
-    sn_transport.print_scalar_flux();
-    //sn_transport.print_eigenvalue();
     
-    FEM_Transport fem_transport(number_of_cells,
-                                number_of_groups,
-                                number_of_scattering_moments,
-                                side_length,
-                                internal_source,
-                                boundary_sources,
-                                sigma_t,
-                                sigma_s,
-                                nu_sigma_f,
-                                chi,
-                                boundary_conditions,
-                                max_iterations,
-                                tolerance,
-                                geometry);
+    // sn_transport.solve();
+    sn_transport.solve_eigenvalue();
 
-    fem_transport.solve();
+    //sn_transport.print_scalar_flux();
+    sn_transport.print_eigenvalue();
+    
+    // FEM_Transport fem_transport(number_of_cells,
+    //                             number_of_groups,
+    //                             number_of_scattering_moments,
+    //                             side_length,
+    //                             internal_source,
+    //                             boundary_sources,
+    //                             sigma_t,
+    //                             sigma_s,
+    //                             nu_sigma_f,
+    //                             chi,
+    //                             boundary_conditions,
+    //                             max_iterations,
+    //                             tolerance,
+    //                             geometry);
+
+    //fem_transport.solve();
     //fem_transport.solve_eigenvalue();
 
-    fem_transport.print_scalar_flux();
+    //fem_transport.print_scalar_flux();
     //fem_transport.print_eigenvalue();
     
     return 0;
@@ -486,8 +486,8 @@ int main(int argc, char *argv[])
     // checksum += test_homo();
     // checksum += test_downscatter();
     // checksum += test_adjoint();
-    // checksum += test_spherical();
-    checksum += test_mc();
+    checksum += test_spherical();
+    // checksum += test_mc();
     // checksum += test_weighted_mc();
     
     //MPI_Finalize();

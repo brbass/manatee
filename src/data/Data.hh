@@ -70,12 +70,12 @@ namespace data_ns
         {
             return number_of_scattering_moments_;
         }
-    
+        
         inline double internal_source(unsigned cell, unsigned group)
         {
             return internal_source_[group + number_of_groups_ * cell];
         }
-    
+        
         inline double boundary_source(unsigned boundary, unsigned group, unsigned ordinate = 0)
         {
             return boundary_sources_[group + number_of_groups_ * (boundary + 2 * ordinate)];
@@ -85,7 +85,7 @@ namespace data_ns
         {
             return sigma_t_[group + number_of_groups_ * cell];
         }
-
+        
         inline double sigma_a(unsigned cell, unsigned group)
         {
             return sigma_a_[group + number_of_groups_ * cell];
@@ -95,7 +95,7 @@ namespace data_ns
         {
             return sigma_s_[from_group + number_of_groups_ * (to_group + number_of_groups_ * (cell + number_of_cells_ * moment))];
         }
-    
+        
         inline double nu_sigma_f(unsigned cell, unsigned from_group)
         {
             return nu_[from_group + number_of_groups_ * cell] * sigma_f_[from_group + number_of_groups_ * cell];
@@ -113,7 +113,7 @@ namespace data_ns
 
         inline double chi(unsigned cell, unsigned to_group)
         {
-            return chi_[to_group * number_of_groups_ * cell];
+            return chi_[to_group + number_of_groups_ * cell];
         }
     
         inline double d(unsigned cell, unsigned from_group, unsigned moment)

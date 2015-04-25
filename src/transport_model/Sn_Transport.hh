@@ -58,6 +58,11 @@ namespace transport_ns
                                vector<double> &phi_old,
                                vector<double> &error_phi,
                                vector<double> &error_phi_old);
+        void check_convergence(bool &converged,
+                               double &k,
+                               double &k_old,
+                               double &error_k,
+                               double &error_k_old);
 
         void epetra_solve(Epetra_SerialDenseMatrix &matrix, Epetra_SerialDenseVector &lhs, Epetra_SerialDenseVector &rhs);        
 
@@ -67,7 +72,7 @@ namespace transport_ns
         Mesh mesh_;
         Ordinates ordinates_;
         
-        unsigned max_iterations_ = 1000;
+        unsigned max_iterations_ = 10000;
         double tolerance_ = 1e-10;
         
         double iterations_;
@@ -242,6 +247,16 @@ namespace transport_ns
         void update_psi_half(vector<double> &psi_half,
                              vector<double> &psi,
                              unsigned o);
+
+        double get_eigenvalue()
+        {
+            return k_eigenvalue_;
+        }
+        
+        double get_iterations()
+        {
+            return iterations_;
+        }
 
         virtual void print_eigenvalue()
         {
