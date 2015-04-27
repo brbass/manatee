@@ -19,18 +19,18 @@ int u_d2o_sys()
     using namespace std;
     using namespace transport_ns;
 
-    vector<unsigned> numbers_of_cells = {10};
-    // for (unsigned i = 1; i < 21; ++i)
-    // {
-    //     numbers_of_cells.push_back(i);
-    // }
+    vector<unsigned> numbers_of_cells = {};
+    for (unsigned i = 1; i < 101; ++i)
+    {
+        numbers_of_cells.push_back(i);
+    }
     
-    vector<unsigned> numbers_of_ordinates = {16};
-    // for (unsigned o = 1; o < 9; ++o)
-    // {
-    //     numbers_of_ordinates.push_back(2 * o);
-    // }
-
+    vector<unsigned> numbers_of_ordinates = {};
+    for (unsigned o = 1; o < 33; ++o)
+    {
+        numbers_of_ordinates.push_back(2 * o);
+    }
+    
     vector<string> boundary_conditions(2, "reflected");
     boundary_conditions[1] = "vacuum";
     string geometry = "spherical";
@@ -70,13 +70,16 @@ int u_d2o_sys()
                                       chi,
                                       boundary_conditions,
                                       geometry);
-    
+
+            Teuchos::Time timer("proj");
+            timer.start();
             sn_transport.solve_eigenvalue();
-    
+            double t = timer.stop();
+            
             double k = sn_transport.get_eigenvalue();
             double it = sn_transport.get_iterations();
             
-            cout << number_of_cells << "\t" << number_of_ordinates << "\t" << it << "\t" << setprecision(25) << k << endl;
+            cout << number_of_cells << "\t" << number_of_ordinates << "\t" << it << "\t" << setw(10) << setprecision(8) << t << "\t" << setprecision(25) << k << endl;
         }
     }
 
@@ -141,12 +144,15 @@ int u_d2o_test()
                                       boundary_conditions,
                                       geometry);
     
+            Teuchos::Time timer("proj");
+            timer.start();
             sn_transport.solve_eigenvalue();
-    
+            double t = timer.stop();
+            
             double k = sn_transport.get_eigenvalue();
             double it = sn_transport.get_iterations();
             
-            cout << number_of_cells << "\t" << number_of_ordinates << "\t" << it << "\t" << setprecision(25) << k << endl;
+            cout << number_of_cells << "\t" << number_of_ordinates << "\t" << it << "\t" << setw(10) << setprecision(8) << t << "\t" << setprecision(25) << k << endl;
         }
     }
 
@@ -168,17 +174,17 @@ int uranium_sys()
     using namespace std;
     using namespace transport_ns;
     
-    vector<unsigned> numbers_of_cells = {10};
-    // for (unsigned i = 1; i < 11; ++i)
-    // {
-    //     numbers_of_cells.push_back(i);
-    // }
+    vector<unsigned> numbers_of_cells = {};
+    for (unsigned i = 1; i < 101; ++i)
+    {
+        numbers_of_cells.push_back(i);
+    }
     
-    vector<unsigned> numbers_of_ordinates = {16};
-    // for (unsigned o = 1; o < 9; ++o)
-    // {
-    //     numbers_of_ordinates.push_back(2 * o);
-    // }
+    vector<unsigned> numbers_of_ordinates = {};
+    for (unsigned o = 1; o < 33; ++o)
+    {
+        numbers_of_ordinates.push_back(2 * o);
+    }
     
     unsigned number_of_groups = 2;
     unsigned number_of_scattering_moments = 1;
@@ -246,15 +252,15 @@ int uranium_sys()
                                       boundary_conditions,
                                       geometry);
             
-            //sn_transport.solve();
-            //sn_transport.print_scalar_flux();
+            Teuchos::Time timer("proj");
+            timer.start();
             sn_transport.solve_eigenvalue();
-
+            double t = timer.stop();
+            
             double k = sn_transport.get_eigenvalue();
             double it = sn_transport.get_iterations();
             
-            cout << number_of_cells << "\t" << number_of_ordinates << "\t" << it << "\t" << setprecision(25) << k << endl;
-            sn_transport.print_scalar_flux();
+            cout << number_of_cells << "\t" << number_of_ordinates << "\t" << it << "\t" << setw(10) << setprecision(8) << t << "\t" << setprecision(25) << k << endl;
         }
     }
     
@@ -281,17 +287,17 @@ int u_235_sys()
     using namespace std;
     using namespace transport_ns;
 
-    vector<unsigned> numbers_of_cells = {10};
-    // for (unsigned i = 1; i < 21; ++i)
-    // {
-    //     numbers_of_cells.push_back(i * 5);
-    // }
+    vector<unsigned> numbers_of_cells = {};
+    for (unsigned i = 1; i < 21; ++i)
+    {
+        numbers_of_cells.push_back(i * 5);
+    }
     
-    vector<unsigned> numbers_of_ordinates = {16};
-    // for (unsigned o = 1; o < 9; ++o)
-    // {
-    //     numbers_of_ordinates.push_back(2 * o);
-    // }
+    vector<unsigned> numbers_of_ordinates = {};
+    for (unsigned o = 1; o < 33; ++o)
+    {
+        numbers_of_ordinates.push_back(2 * o);
+    }
 
     vector<string> boundary_conditions(2, "reflected");
     boundary_conditions[1] = "vacuum";
@@ -362,13 +368,16 @@ int u_235_sys()
                                       boundary_conditions,
                                       geometry);
     
+            Teuchos::Time timer("proj");
+            timer.start();
             sn_transport.solve_eigenvalue();
-    
+            double t = timer.stop();
+            
             double k = sn_transport.get_eigenvalue();
             double it = sn_transport.get_iterations();
             
-            cout << number_of_cells << "\t" << number_of_ordinates << "\t" << it << "\t" << setprecision(25) << k << endl;
-           }
+            cout << number_of_cells << "\t" << number_of_ordinates << "\t" << it << "\t" << setw(10) << setprecision(8) << t << "\t" << setprecision(25) << k << endl;
+        }
     }
 
     return 0;
@@ -378,10 +387,10 @@ int main(int argc, char *argv[])
 {
     unsigned checksum = 0;
 
-    //u_d2o_sys();
+    // u_d2o_sys();
     //u_d2o_test();
-    uranium_sys();
-    //u_235_sys();
+    // uranium_sys();
+    u_235_sys();
     
     return checksum;
 }
