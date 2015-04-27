@@ -44,7 +44,11 @@ namespace monte_carlo_ns
         vector<string> estimator_names_ = {"current",
                                            "surface_flux",
                                            "volume_flux",
-                                           "collision_flux"};
+                                           "collision_flux",
+                                           "curr_var",
+                                           "sur_var",
+                                           "vol_var",
+                                           "coll_var"};
         
         void zero_history_vectors();
         void zero_total_vectors();

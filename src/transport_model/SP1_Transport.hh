@@ -109,7 +109,8 @@ namespace transport_ns
 
             const int w = 8;
             
-            cout << "SP1_Transport" << endl;
+            cout << "SP1_Transport";
+            cout << "\tProblem type: " << problem_type_ << endl;
             // cout << "MATRIX" << endl;
             // cout << *matrix_ << endl;
             

@@ -30,6 +30,16 @@ namespace monte_carlo_ns
         {
             return !particle_bank_.empty();
         }
+
+        inline unsigned number_of_particles()
+        {
+            return particle_bank_.size();
+        }
+
+        long long total_particles()
+        {
+            return total_particles_;
+        }
         
         void add_particle(Particle &part)
         {

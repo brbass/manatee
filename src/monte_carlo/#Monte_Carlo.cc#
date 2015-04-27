@@ -217,7 +217,7 @@ namespace monte_carlo_ns
         }
         
         vector<double> cell_volume(mesh_.number_of_cells());
-
+        
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
             cell_volume[i] = mesh_.cell_length(i);
@@ -226,7 +226,7 @@ namespace monte_carlo_ns
         estimators_.normalize(total_source_,
                               number_of_histories_,
                               cell_volume);
-
+        
         runtime_ = timer.stop();
     }
     

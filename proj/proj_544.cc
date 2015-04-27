@@ -14,7 +14,7 @@ int test_weighted_mc()
     using namespace transport_ns;
     
     // initialize mutual variables
-    unsigned number_of_cells = 30;
+    unsigned number_of_cells = 120;
     unsigned number_of_groups = 2;
     unsigned number_of_scattering_moments = 2;
     
@@ -28,13 +28,21 @@ int test_weighted_mc()
     
     unsigned number_of_regions = 3;
     
-    vector<double> sigma_t0 = {0.1, 10.0, 1.0};
-    vector<double> sigma_t1 = {0.1, 10.0, 1.0};
+    // vector<double> sigma_t0 = {0.1, 10.0, 1.0};
+    // vector<double> sigma_t1 = {0.1, 10.0, 1.0};
 
-    vector<double> sigma_s00 = {0.05, 1.0, 1.0};
-    vector<double> sigma_s01 = {0.05, 1.0, 0.0};
-    vector<double> sigma_s10 = {0.0, 1.0, 0.0};
-    vector<double> sigma_s11 = {0.1, 1.0, 0.0};
+    // vector<double> sigma_s00 = {0.04, 4.0, 0.4};
+    // vector<double> sigma_s01 = {0.04, 4.0, 0.4};
+    // vector<double> sigma_s10 = {0.0, 0.0, 0.0};
+    // vector<double> sigma_s11 = {0.08, 8.0, 0.0};
+
+    vector<double> sigma_t0 = {0.1, 5.0, 1.0};
+    vector<double> sigma_t1 = {0.1, 5.0, 1.0};
+
+    vector<double> sigma_s00 = {0.45 * sigma_t0[0], 0.45 * sigma_t0[1], 0.45 * sigma_t0[2]};
+    vector<double> sigma_s01 = {0.45 * sigma_t0[0], 0.45 * sigma_t0[1], 0.45 * sigma_t0[2]};
+    vector<double> sigma_s10 = {0.0, 0.0, 0.0};
+    vector<double> sigma_s11 = {0.9 * sigma_t1[0], 0.9 * sigma_t1[1], 0.0};
     
     vector<double> internal_source0 = {1.0, 0.0, 0.0};
     vector<double> internal_source1 = {0.0, 0.0, 0.0};
@@ -102,7 +110,7 @@ int test_weighted_mc()
     
     // solve using monte carlo and weight windows
     boundary_conditions.assign(2, "reflected");
-    unsigned number_of_histories = 1e0;
+    unsigned number_of_histories = 1e3;
     bool implicit_capture = true;
     
     vector<double> nu(number_of_cells * number_of_groups, 0.0*1.70);
@@ -122,9 +130,10 @@ int test_weighted_mc()
                             chi,
                             boundary_conditions,
                             implicit_capture);
-    
-    monte_carlo.initialize_weight_windows(phi_adjoint);
 
+    double max_splitting = 5.0;
+    monte_carlo.initialize_weight_windows(phi_adjoint, 1.05);
+    
     monte_carlo.solve();
     
     monte_carlo.print_scalar_flux();

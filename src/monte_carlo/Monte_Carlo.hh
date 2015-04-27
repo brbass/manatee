@@ -29,8 +29,11 @@ namespace monte_carlo_ns
         };
         
         bool implicit_capture_;
-        
+        bool init_with_adjoint_ = false;
         unsigned number_of_histories_;
+
+        double max_splitting_ = 1.0;
+        double runtime_ = 0.0;
         
         double total_source_;
         // double total_birth_weight_ = 0.0;
@@ -118,13 +121,25 @@ namespace monte_carlo_ns
                     vector<string> &boundary_conditions,
                     bool implicit_capture = true);
 
-        void initialize_weight_windows(vector<double> &phi_adjoint);
+        void initialize_weight_windows(vector<double> &phi_adjoint, double max_split = 1.2);
         
         void solve();
 
         void print_scalar_flux()
         {
-            cout << "Monte Carlo" << endl;
+            cout << "Monte Carlo";
+            cout << "\tTotal particles: " << bank_.total_particles();
+            cout << "\tNum histories: " << number_of_histories_;
+            cout << "\tImplicit capture: " << implicit_capture_;
+            cout << "\tInit with adjoint: " << init_with_adjoint_;
+            if (init_with_adjoint_)
+            {
+                cout << "\tMax split: " << max_splitting_;
+            }
+            cout << "\tRuntime: " << runtime_;
+
+            cout << endl;
+            
             estimators_.print();
         }
 
