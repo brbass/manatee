@@ -217,7 +217,7 @@ namespace monte_carlo_ns
         }
         
         vector<double> cell_volume(mesh_.number_of_cells());
-
+        
         for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
         {
             cell_volume[i] = mesh_.cell_length(i);
@@ -226,7 +226,7 @@ namespace monte_carlo_ns
         estimators_.normalize(total_source_,
                               number_of_histories_,
                               cell_volume);
-
+        
         runtime_ = timer.stop();
     }
     
@@ -609,33 +609,109 @@ namespace monte_carlo_ns
                 weight_windows(i, g).ideal = weight_windows(i, g).lower * ideal_over_lower_;
             }
         }
-        
-        if (max_split >= 1) // max splitting across a cell
-        {
-            // ensure that weight windows only split a certain amount across each cell
 
+        // calculate the average weight window for each group at the points where particles are born
+        for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+        {
+            double average_source_weight = 0;
+            double average_source = 0;
+            
+            for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+            {
+                average_source_weight += weight_windows(i, g).ideal * mesh_.cell_length(i) * data_.internal_source(i, g);
+                average_source += mesh_.cell_length(i) * data_.internal_source(i, g);
+            }
+            
+            average_source_weight /= average_source;
+
+            for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
+            {
+                weight_windows(i, g).ideal /= average_source_weight;
+                weight_windows(i, g).lower = weight_windows(i, g).ideal / ideal_over_lower_;
+                weight_windows(i, g).upper = weight_windows(i, g).lower * upper_over_lower_;
+
+            }
+        }
+
+        
+        if (false)//max_splitting_ >= 1) // max splitting across a cell
+        {
+            // // ensure that weight windows only split a certain amount across each cell
+
+            // for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+            // {
+            //     for (unsigned i = 0; i < mesh_.number_of_cells() - 1; ++i)
+            //     {
+            //         unsigned k = g + data_.number_of_groups() * i;
+
+            //         if (weight_windows(i + 1, g).ideal < weight_windows(i, g).ideal / max_splitting_)
+            //         {
+            //             weight_windows(i + 1, g).ideal = weight_windows(i, g).ideal / max_splitting_;
+            //         }
+            //         else if (weight_windows(i + 1, g).upper > weight_windows(i, g).upper * max_splitting_)
+            //         {
+            //             weight_windows(i + 1, g).ideal = weight_windows(i, g).ideal * max_splitting_;
+            //         }
+            //         else if (weight_windows(i + 1, g).upper > weight_windows(i, g).upper)
+            //         {
+            //             weight_windows(i + 1, g).ideal = weight_windows(i, g).ideal * weight_windows(i + 1, g).upper / weight_windows(i, g).upper;
+            //         }
+            //         else
+            //         {
+            //             weight_windows(i + 1, g).ideal = weight_windows(i, g).ideal * weight_windows(i + 1, g).lower / weight_windows(i, g).lower;
+            //         }
+            //     }
+            // }
+
+            // calculate the current difference between weight window i and i + 1
+            vector<double> win_diff((mesh_.number_of_cells() - 1) * data_.number_of_groups(), 0.0);
+            
+            for (unsigned i = 0; i < mesh_.number_of_cells() - 1; ++i)
+            {
+                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                {
+                    win_diff[g + data_.number_of_groups() * i] = weight_windows(i + 1, g).ideal / weight_windows(i, g).ideal;
+                }
+            }
+
+            // calculate the max and min difference between weight window i and i + 1
+            vector<double> max_diff(data_.number_of_groups(), 0);
+            vector<double> min_diff(data_.number_of_groups(), max_splitting_);
+            
+            for (unsigned i = 0; i < mesh_.number_of_cells() - 1; ++i)
+            {
+                for (unsigned g = 0; g < data_.number_of_groups(); ++g)
+                {
+                    double val = win_diff[g + data_.number_of_groups() * i];
+                    
+                    if (val > max_diff[g])
+                    {
+                        max_diff[g] = val;
+                    }
+                    else if (val < min_diff[g])
+                    {
+                        min_diff[g] = val;
+                    }
+                }
+            }
+            
+            // scale the weight window differences appropriately
             for (unsigned g = 0; g < data_.number_of_groups(); ++g)
             {
-                for (unsigned i = 0; i < mesh_.number_of_cells() - 1; ++i)
+                if (max_diff[g] > min_diff[g])
                 {
-                    unsigned k = g + data_.number_of_groups() * i;
-
-                    if (weight_windows(i + 1, g).ideal < weight_windows(i, g).ideal / max_split)
+                    for (unsigned i = 0; i < mesh_.number_of_cells() - 1; ++i)
                     {
-                        weight_windows(i + 1, g).ideal = weight_windows(i, g).ideal / max_split;
+                        weight_windows(i + 1, g).ideal = weight_windows(i, g).ideal
+                            * new_weight_difference(min_diff[g],
+                                                    max_diff[g], 
+                                                    win_diff[g + data_.number_of_groups() * i],
+                                                    max_splitting_);
                     }
-                    else if (weight_windows(i + 1, g).upper > weight_windows(i, g).upper * max_split)
-                    {
-                        weight_windows(i + 1, g).ideal = weight_windows(i, g).ideal * max_split;
-                    }
-                    else if (weight_windows(i + 1, g).upper > weight_windows(i, g).upper)
-                    {
-                        weight_windows(i + 1, g).ideal = weight_windows(i, g).ideal * weight_windows(i + 1, g).upper / weight_windows(i, g).upper;
-                    }
-                    else
-                    {
-                        weight_windows(i + 1, g).ideal = weight_windows(i, g).ideal * weight_windows(i + 1, g).lower / weight_windows(i, g).lower;
-                    }
+                }
+                else
+                {
+                    cerr << "max weight window is not larger than min" << endl;
                 }
             }
 
@@ -658,7 +734,7 @@ namespace monte_carlo_ns
                     weight_windows(i, g).ideal /= sum[g];
                 }
             }
-            
+
             // calculate new upper and lower weight windows
             for (unsigned i = 0; i < mesh_.number_of_cells(); ++i)
             {
@@ -670,5 +746,11 @@ namespace monte_carlo_ns
                 }
             }
         }
+    }
+
+    double Monte_Carlo::
+    new_weight_difference(double min_diff, double max_diff, double current_diff, double max_split)
+    {
+        return (max_split - 1.0 / max_split) / (max_diff - min_diff) * (current_diff - min_diff) + 1.0 / max_split;
     }
 }

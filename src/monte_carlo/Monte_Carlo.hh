@@ -103,7 +103,9 @@ namespace monte_carlo_ns
         void check_weight_windows(Particle &particle);
         
         void initialize_weight_windows();
-
+        
+        double new_weight_difference(double min_diff, double max_diff, double current_diff, double max_split);
+            
     public:
     
         Monte_Carlo(unsigned &number_of_cells,
@@ -122,7 +124,7 @@ namespace monte_carlo_ns
                     bool implicit_capture = true);
 
         void initialize_weight_windows(vector<double> &phi_adjoint, double max_split = 1.2);
-        
+
         void solve();
 
         void print_scalar_flux()
