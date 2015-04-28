@@ -181,13 +181,13 @@ namespace monte_carlo_ns
                     cout << setw(width) << collision_flux_.total_[g + number_of_groups_ * i];
                 }
 
-                cout << setw(width) << current_.total_squared_[g + number_of_groups_ * i] - pow(current_.total_[g + number_of_groups_ * i], 2);
-                cout << setw(width) << surface_flux_.total_squared_[g + number_of_groups_ * i] - pow(surface_flux_.total_[g + number_of_groups_ * i], 2);
-                if (i < number_of_cells_)
-                {
-                    cout << setw(width) << volume_flux_.total_squared_[g + number_of_groups_ * i] - pow(volume_flux_.total_[g + number_of_groups_ * i], 2);
-                    cout << setw(width) << collision_flux_.total_squared_[g + number_of_groups_ * i] - pow(collision_flux_.total_[g + number_of_groups_ * i], 2);
-                }
+                // cout << setw(width) << current_.total_squared_[g + number_of_groups_ * i] - pow(current_.total_[g + number_of_groups_ * i], 2);
+                // cout << setw(width) << surface_flux_.total_squared_[g + number_of_groups_ * i] - pow(surface_flux_.total_[g + number_of_groups_ * i], 2);
+                // if (i < number_of_cells_)
+                // {
+                //     cout << setw(width) << volume_flux_.total_squared_[g + number_of_groups_ * i] - pow(volume_flux_.total_[g + number_of_groups_ * i], 2);
+                //     cout << setw(width) << collision_flux_.total_squared_[g + number_of_groups_ * i] - pow(collision_flux_.total_[g + number_of_groups_ * i], 2);
+                // }
                 
                 cout << endl;
             }

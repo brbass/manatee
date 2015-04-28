@@ -32,7 +32,6 @@ namespace monte_carlo_ns
         bool init_with_adjoint_ = false;
         unsigned number_of_histories_;
 
-        double max_splitting_ = 1.0;
         double runtime_ = 0.0;
         
         double total_source_;
@@ -104,8 +103,6 @@ namespace monte_carlo_ns
         
         void initialize_weight_windows();
         
-        double new_weight_difference(double min_diff, double max_diff, double current_diff, double max_split);
-            
     public:
     
         Monte_Carlo(unsigned &number_of_cells,
@@ -123,7 +120,7 @@ namespace monte_carlo_ns
                     vector<string> &boundary_conditions,
                     bool implicit_capture = true);
 
-        void initialize_weight_windows(vector<double> &phi_adjoint, double max_split = 1.2);
+        void initialize_weight_windows(vector<double> &phi_adjoint);
 
         void solve();
 
@@ -134,10 +131,6 @@ namespace monte_carlo_ns
             cout << "\tNum histories: " << number_of_histories_;
             cout << "\tImplicit capture: " << implicit_capture_;
             cout << "\tInit with adjoint: " << init_with_adjoint_;
-            if (init_with_adjoint_)
-            {
-                cout << "\tMax split: " << max_splitting_;
-            }
             cout << "\tRuntime: " << runtime_;
 
             cout << endl;
