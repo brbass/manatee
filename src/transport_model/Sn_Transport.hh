@@ -273,7 +273,7 @@ namespace transport_ns
 
             const int w = 8;
             
-            cout << "Sn_Transport" << endl;
+            cout << "Sn_Transport, iterations: " << iterations_ << endl;
 
             cout << left;
             cout << setw(w) <<  "cell" << setw(w) << "node" << setw(w) << "group" << setw(w) << "phi" << endl;
@@ -312,7 +312,6 @@ namespace transport_ns
                         for (unsigned o = 0; o < ordinates_.number_of_ordinates(); ++o)
                         {
                             unsigned k = n + mesh_.number_of_nodes() * (g + data_.number_of_groups() * (o + ordinates_.number_of_ordinates() * i));
-                            if(psi[k] > 10 || psi[k] < 0)
                             {
                                 cout << setw(w) << i << setw(w) << n << setw(w) << g << setw(w) << o << setw(w) << psi[k] << endl;
                             }

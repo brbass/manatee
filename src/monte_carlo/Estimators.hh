@@ -41,15 +41,12 @@ namespace monte_carlo_ns
                                           &volume_flux_,
                                           &collision_flux_};
         
-        vector<string> estimator_names_ = {"current",
-                                           "surface_flux",
-                                           "volume_flux",
-                                           "collision_flux",
-                                           "curr_var",
-                                           "sur_var",
-                                           "vol_var",
-                                           "coll_var"};
-        
+        vector<string> estimator_names_ = {"current", "surface_flux", "volume_flux", "collision_flux",
+                                           "curr_var", "sur_var", "vol_var", "coll_var",
+                                           "curr_err", "sur_err", "vol_err", "coll_err",
+                                           "curr_rel", "sur_rel", "vol_rel", "coll_rel",
+                                           "curr_fom", "sur_fom", "vol_fom", "coll_fom"};
+
         void zero_history_vectors();
         void zero_total_vectors();
         void sum_history_vectors();
@@ -83,7 +80,7 @@ namespace monte_carlo_ns
                           double weight,
                           double ordinate);
         
-        void print();
+        void print(double runtime);
     };
 }
 

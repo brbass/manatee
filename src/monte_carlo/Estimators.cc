@@ -101,10 +101,10 @@ namespace monte_carlo_ns
             for (unsigned g = 0; g < number_of_groups_; ++g)
             {
                 current_.total_[g + number_of_groups_ * i] *= total_source / number_of_histories;
-                current_.total_squared_[g + number_of_groups_ * i] *= total_source / number_of_histories;
-
+                current_.total_squared_[g + number_of_groups_ * i] *= pow(total_source, 2) / number_of_histories;
+                
                 surface_flux_.total_[g + number_of_groups_ * i] *= total_source / number_of_histories;
-                surface_flux_.total_squared_[g + number_of_groups_ * i] *= total_source / number_of_histories;
+                surface_flux_.total_squared_[g + number_of_groups_ * i] *= pow(total_source, 2) / number_of_histories;
             }
         }
 
@@ -113,10 +113,10 @@ namespace monte_carlo_ns
             for (unsigned g = 0; g < number_of_groups_; ++g)
             {
                 volume_flux_.total_[g + number_of_groups_ * i] *= total_source / (number_of_histories * cell_volume[i]);
-                volume_flux_.total_squared_[g + number_of_groups_ * i] *= total_source / (number_of_histories * cell_volume[i]);
+                volume_flux_.total_squared_[g + number_of_groups_ * i] *= pow(total_source / cell_volume[i], 2) / number_of_histories;
                 
                 collision_flux_.total_[g + number_of_groups_ * i] *= total_source / (number_of_histories * cell_volume[i]);
-                collision_flux_.total_squared_[g + number_of_groups_ * i] *= total_source / (number_of_histories * cell_volume[i]);
+                collision_flux_.total_squared_[g + number_of_groups_ * i] *= pow(total_source / cell_volume[i], 2) / number_of_histories;
             }
         }
     }
@@ -151,15 +151,13 @@ namespace monte_carlo_ns
                  double ordinate)
     {
         current_.history_[group + number_of_groups_ * surface] += weight;
-        surface_flux_.total_[group + number_of_groups_ * surface] += weight / abs(ordinate);
+        surface_flux_.history_[group + number_of_groups_ * surface] += weight / abs(ordinate);
     }
 
     void Estimators::
-    print()
+    print(double runtime)
     {
         int width = 16;
-        
-        cout << "Estimator values" << endl << endl;
         
         cout << setw(width) << "cell/edge" << setw(width) << "group";
         for (unsigned j = 0; j < estimator_names_.size(); ++j)
@@ -172,22 +170,93 @@ namespace monte_carlo_ns
         {
             for (unsigned i = 0; i < number_of_surfaces_; ++i)
             {
+                double
+                    current_var = 0,
+                    surface_var = 0,
+                    volume_var = 0,
+                    collision_var = 0,
+                    current_err = 0,
+                    surface_err = 0,
+                    volume_err = 0,
+                    collision_err = 0,
+                    current_rel = 0,
+                    surface_rel = 0,
+                    volume_rel = 0,
+                    collision_rel = 0;
+
+                unsigned k = g + number_of_groups_ * i;
+                
                 cout << setw(width) << i << setw(width) << g;
-                cout << setw(width) << current_.total_[g + number_of_groups_ * i];
-                cout << setw(width) << surface_flux_.total_[g + number_of_groups_ * i];
+
+                // total
+                cout << setw(width) << current_.total_[k];
+                cout << setw(width) << surface_flux_.total_[k];
+                
                 if (i < number_of_cells_)
                 {
-                    cout << setw(width) << volume_flux_.total_[g + number_of_groups_ * i];
-                    cout << setw(width) << collision_flux_.total_[g + number_of_groups_ * i];
+                    cout << setw(width) << volume_flux_.total_[k];
+                    cout << setw(width) << collision_flux_.total_[k];
+                }
+                
+                // variance
+                current_var = current_.total_squared_[k] - pow(current_.total_[k], 2);
+                surface_var = surface_flux_.total_squared_[k] - pow(surface_flux_.total_[k], 2);
+                
+                cout << setw(width) << current_var;
+                cout << setw(width) << surface_var;
+                
+                if (i < number_of_cells_)
+                {
+                    volume_var = volume_flux_.total_squared_[k] - pow(volume_flux_.total_[k], 2);
+                    collision_var = collision_flux_.total_squared_[k] - pow(collision_flux_.total_[k], 2);
+                    
+                    cout << setw(width) << volume_var;
+                    cout << setw(width) << collision_var;
+                }
+            
+                // standard error
+                current_err = sqrt(current_var / number_of_histories_);
+                surface_err = sqrt(surface_var / number_of_histories_);
+                
+                cout << setw(width) << current_err;
+                cout << setw(width) << surface_err;
+                
+                if (i < number_of_cells_)
+                {
+                    volume_err = sqrt(volume_var / number_of_histories_);
+                    collision_err = sqrt(collision_var / number_of_histories_);
+                    
+                    cout << setw(width) << volume_err;
+                    cout << setw(width) << collision_err;
                 }
 
-                // cout << setw(width) << current_.total_squared_[g + number_of_groups_ * i] - pow(current_.total_[g + number_of_groups_ * i], 2);
-                // cout << setw(width) << surface_flux_.total_squared_[g + number_of_groups_ * i] - pow(surface_flux_.total_[g + number_of_groups_ * i], 2);
-                // if (i < number_of_cells_)
-                // {
-                //     cout << setw(width) << volume_flux_.total_squared_[g + number_of_groups_ * i] - pow(volume_flux_.total_[g + number_of_groups_ * i], 2);
-                //     cout << setw(width) << collision_flux_.total_squared_[g + number_of_groups_ * i] - pow(collision_flux_.total_[g + number_of_groups_ * i], 2);
-                // }
+                // relative error
+
+                current_rel = current_err / current_.total_[k];
+                surface_rel = surface_err / surface_flux_.total_[k];
+                
+                cout << setw(width) << current_rel;
+                cout << setw(width) << surface_rel;
+                
+                if (i < number_of_cells_)
+                {
+                    volume_rel = volume_err / volume_flux_.total_[k];
+                    collision_rel = collision_err / collision_flux_.total_[k];
+                    
+                    cout << setw(width) << volume_rel;
+                    cout << setw(width) << collision_rel;
+                }
+                
+                // figure of merit
+
+                cout << setw(width) << 1 / (pow(current_rel, 2) * runtime);
+                cout << setw(width) << 1 / (pow(surface_rel, 2) * runtime);
+                
+                if (i < number_of_cells_)
+                {
+                    cout << setw(width) << 1 / (pow(volume_rel, 2) * runtime);
+                    cout << setw(width) << 1 / (pow(collision_rel, 2) * runtime);
+                }
                 
                 cout << endl;
             }

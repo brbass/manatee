@@ -135,7 +135,9 @@ namespace monte_carlo_ns
 
             cout << endl;
             
-            estimators_.print();
+            estimators_.print(runtime_);
+            
+            cout << endl;
         }
 
     };
