@@ -1,0 +1,49 @@
+import numpy as np
+from matplotlib import pyplot as plt
+
+class mc:
+    cell = 0
+    group = 1
+    
+    cur = 2
+    sur = 3
+    vol = 4
+    col = 5
+    
+    cur_var = 6
+    sur_var = 7
+    vol_var = 8
+    col_var = 9
+    
+    cur_err = 10
+    sur_err = 11
+    vol_err = 12
+    col_err = 13
+
+    cur_rel = 14
+    sur_rel = 15
+    vol_rel = 16
+    col_rel = 17
+
+    cur_fom = 18
+    sur_fom = 19
+    vol_fom = 20
+    col_fom = 21
+    
+class dt:
+    cell = 0
+    group = 1
+
+    sp1ad = 2
+    sp1fw = 3
+
+    sn = 4
+
+case = "thick"
+
+det_data = np.loadtxt(case + "/deterministic.txt", skiprows=2)
+im0ad0 = np.genfromtxt(case + "/im0ad0.txt", skiprows=2, delimiter=16, filling_values=0, dtype=float)
+
+print(im0ad0[:,mc.cell]) 
+
+

@@ -1,0 +1,1586 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\begin_modules
+eqs-within-sections
+\end_modules
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement H
+\paperfontsize default
+\spacing single
+\use_hyperref true
+\pdf_bookmarks true
+\pdf_bookmarksnumbered false
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks false
+\pdf_pdfborder false
+\pdf_colorlinks true
+\pdf_backref false
+\pdf_pdfusetitle true
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2.5cm
+\topmargin 2.5cm
+\rightmargin 2.5cm
+\bottommargin 2.5cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+\begin_inset Formula $SP_{N}$
+\end_inset
+
+ Equations
+\end_layout
+
+\begin_layout Author
+Brody Bassett
+\end_layout
+
+\begin_layout Section
+Derivation of the Slab-Geometry 
+\begin_inset Formula $P_{N}$
+\end_inset
+
+ Equations
+\end_layout
+
+\begin_layout Subsection
+Derivation of the Slab-Geometry 
+\begin_inset Formula $P_{N}$
+\end_inset
+
+ Equations
+\end_layout
+
+\begin_layout Standard
+First, define the following:
+\begin_inset Formula 
+\begin{align*}
+\text{natural numbers}:\qquad\mathbb{N} & =\left(0,1,2,3,\dots\right),\\
+\text{odd numbers}:\qquad\mathbb{O} & =\left(1,3,5,7,\dots\right),\\
+\text{even numbers}:\qquad\mathbb{E} & =\left(0,2,4,5,\dots\right).
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The standard first-order multigroup, 
+\begin_inset Formula $P_{N}$
+\end_inset
+
+, slab geometry differential equations are
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{d}{dx}\left\{ \frac{n}{2n+1}\phi_{n-1}\left(x\right)+\frac{n+1}{2n+1}\phi_{n+1}\left(x\right)\right\} +\Sigma_{t}\left(x\right)\phi_{n}\left(x\right)=\Sigma_{sn}\left(x\right)\phi_{n}\left(x\right)+Q\left(x\right)\delta_{n,0},\quad n\in\mathbb{N}.\label{eq:pn_first_order}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Solve Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:pn_first_order"
+
+\end_inset
+
+ for 
+\begin_inset Formula $\phi_{n}$
+\end_inset
+
+ in terms of 
+\begin_inset Formula $\phi_{n-1}$
+\end_inset
+
+ and 
+\begin_inset Formula $\phi_{n+1}$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\phi_{n}\left(x\right) & =\left[\Sigma_{t}\left(x\right)-\Sigma_{sn}\left(x\right)\right]^{-1}\left[Q\left(x\right)\delta_{n,0}-\frac{d}{dx}\left\{ \frac{n}{2n+1}\phi_{n-1}\left(x\right)+\frac{n+1}{2n+1}\phi_{n+1}\left(x\right)\right\} \right]\nonumber \\
+ & =\frac{n}{2n+1}\left[\Sigma_{t}\left(x\right)-\Sigma_{sn}\left(x\right)\right]^{-1}\left[Q\left(x\right)\delta_{n,0}-\frac{d}{dx}\left\{ \phi_{n-1}\left(x\right)+\frac{n+1}{n}\phi_{n+1}\left(x\right)\right\} \right]\nonumber \\
+ & =\left(\frac{2n-1}{n}\right)D_{n-1}\left(x\right)\left[Q\left(x\right)\delta_{n,0}-\frac{d}{dx}\left\{ \phi_{n-1}\left(x\right)+\frac{n+1}{n}\phi_{n+1}\left(x\right)\right\} \right],\quad n\in\mathbb{N}.
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Substitute 
+\begin_inset Formula $\phi_{n-1}$
+\end_inset
+
+ and 
+\begin_inset Formula $\phi_{n+1}$
+\end_inset
+
+ into the previous equation for 
+\begin_inset Formula $\phi_{n}$
+\end_inset
+
+ to develop a relation for 
+\begin_inset Formula $\phi_{n}$
+\end_inset
+
+ in terms of 
+\begin_inset Formula $\phi_{n-2}$
+\end_inset
+
+ and 
+\begin_inset Formula $\phi_{n+2}$
+\end_inset
+
+ and to eliminate the terms 
+\begin_inset Formula $\phi_{n}$
+\end_inset
+
+ for which 
+\begin_inset Formula $n\in\mathbb{O}$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\left[\Sigma_{t}\left(x\right)-\Sigma_{sn}\left(x\right)\right]\phi_{n}\left(x\right)= & Q\left(x\right)\delta_{n,0}\nonumber \\
+ & -\left(\frac{n}{2n+1}\right)\left(\frac{2n-3}{n-1}\right)\frac{d}{dx}\left\{ D_{n-2}\left(x\right)\left[\cancelto{0}{Q\left(x\right)\delta_{n-1,0}}-\frac{d}{dx}\left\{ \phi_{n-2}\left(x\right)+\frac{n}{n-1}\phi_{n}\left(x\right)\right\} \right]\right\} \nonumber \\
+ & -\left(\frac{n}{2n+1}\right)\left(\frac{n+1}{n}\right)\left(\frac{2n+1}{n+1}\right)\frac{d}{dx}\left\{ D_{n}\left(x\right)\left[\cancelto{0}{Q\left(x\right)\delta_{n+1,0}}-\frac{d}{dx}\left\{ \phi_{n}\left(x\right)+\frac{n+2}{n+1}\phi_{n+2}\left(x\right)\right\} \right]\right\} \nonumber \\
+= & \left(\frac{n}{2n+1}\right)\left(\frac{2n-3}{n-1}\right)\frac{d}{dx}\left\{ D_{n-2}\left(x\right)\frac{d}{dx}\left\{ \phi_{n-2}\left(x\right)+\frac{n}{n-1}\phi_{n}\left(x\right)\right\} -Q\left(x\right)\delta_{n-1,0}\right\} \nonumber \\
+ & +\frac{d}{dx}\left\{ D_{n}\left(x\right)\frac{d}{dx}\left\{ \phi_{n}\left(x\right)+\frac{n+2}{n+1}\phi_{n+2}\left(x\right)\right\} \right\} +Q\left(x\right)\delta_{n,0},\quad n\in\mathbb{E}.
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Written in standard form, the equation will read
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{multline}
+-\left(\frac{n}{2n+1}\right)\left(\frac{2n-3}{n-1}\right)\frac{d}{dx}\left\{ D_{n-2}\left(x\right)\frac{d}{dx}\left\{ \phi_{n-2}\left(x\right)+\frac{n}{n-1}\phi_{n}\left(x\right)\right\} \right\} \\
+-\frac{d}{dx}\left\{ D_{n}\left(x\right)\frac{d}{dx}\left\{ \phi_{n}\left(x\right)+\frac{n+2}{n+1}\phi_{n+2}\left(x\right)\right\} \right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,n}\left(x\right)\right]\phi_{n}\left(x\right)\\
+=\delta_{n,0}Q\left(x\right),\quad n\in\mathbb{E},\label{eq:coupled_pn_unsimplified}
+\end{multline}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+or
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{multline}
+-\frac{d}{dx}\left\{ \left(\frac{n}{2n+1}\right)\left(\frac{2n-3}{n-1}\right)D_{n-2}\left(x\right)\frac{d}{dx}\phi_{n-2}\left(x\right)\right\} \\
+-\frac{d}{dx}\left\{ \left[\left(\frac{n}{n-1}\right)^{2}\left(\frac{2n-3}{2n+1}\right)D_{n-2}\left(x\right)+D_{n}\left(x\right)\right]\frac{d}{dx}\phi_{n}\left(x\right)\right\} \\
+-\frac{d}{dx}\left\{ \left(\frac{n+2}{n+1}\right)D_{n}\left(x\right)\frac{d}{dx}\phi_{n+2}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,n}\left(x\right)\right]\phi_{n}\left(x\right)\\
+=\delta_{n,0}Q\left(x\right),\quad n\in\mathbb{E}.\label{eq:coupled_pn}
+\end{multline}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This form of the equation is solvable by itself, but with derivative terms
+ for the 
+\begin_inset Formula $n$
+\end_inset
+
+ equation in 
+\begin_inset Formula $\phi_{n}$
+\end_inset
+
+, 
+\begin_inset Formula $\phi_{n-2}$
+\end_inset
+
+ and 
+\begin_inset Formula $\phi_{n+2}$
+\end_inset
+
+.
+ This can be traded for an equation with a derivative in 
+\begin_inset Formula $\phi_{n}$
+\end_inset
+
+ and non-derivative terms in every even 
+\begin_inset Formula $\phi_{n}$
+\end_inset
+
+.
+ To do this, define 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\Phi_{n}\left(x\right)=\phi_{n}\left(x\right)+\frac{n+2}{n+1}\phi_{n+2}\left(x\right)\label{eq:big_phi}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and use it to simplify Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:coupled_pn_unsimplified"
+
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{multline}
+-\left(\frac{n}{2n+1}\right)\left(\frac{2n-3}{n-1}\right)\frac{d}{dx}\left\{ D_{n-2}\left(x\right)\frac{d}{dx}\Phi_{n-2}\left(x\right)\right\} \\
+-\frac{d}{dx}\left\{ D_{n}\left(x\right)\frac{d}{dx}\Phi_{n}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,n}\left(x\right)\right]\phi_{n}\left(x\right)\\
+=\delta_{n,0}Q\left(x\right),\quad n\in\mathbb{E}.\label{eq:two_derivative_spn}
+\end{multline}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Solving Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:big_phi"
+
+\end_inset
+
+ for 
+\begin_inset Formula $\phi_{n}\left(x\right)$
+\end_inset
+
+ allows the development of a recursion relationship,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\phi_{n}\left(x\right) & =\Phi_{n}\left(x\right)-\frac{n+2}{n+1}\phi_{n+2}\left(x\right)\nonumber \\
+ & =\Phi_{n}\left(x\right)-\frac{n+2}{n+1}\left(\Phi_{n+2}\left(x\right)-\frac{n+4}{n+3}\psi_{n+4}\right)\nonumber \\
+ & =\Phi_{n}\left(x\right)-\frac{n+2}{n+1}\left(\Phi_{n+2}\left(x\right)-\frac{n+4}{n+3}\left(\Phi_{n+4}-\frac{n+6}{n+5}\psi_{n+6}\right)\right)\nonumber \\
+ & =\Phi_{n}\left(x\right)+\sum_{m\in\mathbb{E}}^{\left(n+2,N-1\right)}\left[\prod_{\ell\in\mathbb{E}}^{\left(n+2,m\right)}\left(-\frac{\ell}{\ell-1}\right)\right]\Phi_{m}\left(x\right).
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+With 
+\begin_inset Formula 
+\begin{equation}
+k_{nm}=\prod_{\ell\in\mathbb{E}}^{\left(n+2,m\right)}\left(-\frac{\ell}{\ell-1}\right),
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+the equation simplifies to 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\phi_{n}\left(x\right)=\Phi_{n}\left(x\right)+\sum_{m\in\mathbb{E}}^{\left(n+2,N-1\right)}k_{nm}\Phi_{m}\left(x\right).\label{eq:recursive_phi}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Define the temporary variables
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{subequations}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\beta_{n}\left(x\right) & =\frac{d}{dx}\left\{ D_{n}\left(x\right)\frac{d}{dx}\Phi_{n}\left(x\right)\right\} ,\\
+\alpha_{n}\left(x\right) & =\left[\Sigma_{t}\left(x\right)-\Sigma_{s,n}\left(x\right)\right]\phi_{n}\left(x\right)-\delta_{n,0}Q\left(x\right),
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{subequations}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+solve for 
+\begin_inset Formula $\beta_{n}\left(x\right)$
+\end_inset
+
+ in the context of Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:two_derivative_spn"
+
+\end_inset
+
+, and develop another recursion relationship:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\beta_{n}\left(x\right) & =\alpha_{n}\left(x\right)-\left(\frac{n}{2n+1}\right)\left(\frac{2n-3}{n-1}\right)\beta_{n-2}\nonumber \\
+ & =\alpha_{n}\left(x\right)-\left(\frac{n}{2n+1}\right)\left(\frac{2n-3}{n-1}\right)\left[\alpha_{n-2}\left(x\right)-\left(\frac{n-2}{2n-3}\right)\left(\frac{2n-7}{n-3}\right)\beta_{n-4}\right]\nonumber \\
+ & =\sum_{n\in\mathbb{E}}^{\left(0,n\right)}\left[\prod_{\ell\in\mathbb{E}}^{\left(0,n\right)}\left(-1\right)\left(\frac{\ell}{2\ell+1}\right)\left(\frac{2\ell-3}{\ell-1}\right)\right]\alpha_{n}\left(x\right)\nonumber \\
+ & =\left(\frac{2n+5}{n+2}\right)\left(\frac{n+1}{2n+1}\right)\sum_{\ell\in\mathbb{E}}^{\left(0,n\right)}m_{\ell}\alpha_{\ell}\left(x\right)
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+m_{n}=\left(\frac{n+2}{2n+5}\right)\left(\frac{2n+1}{n+1}\right)\prod_{\ell\in\mathbb{E}}^{\left(0,n\right)}\left(-1\right)\left(\frac{\ell}{2\ell+1}\right)\left(\frac{2\ell-3}{\ell-1}\right).
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Substitute 
+\begin_inset Formula $\beta_{n-2}\left(x\right)$
+\end_inset
+
+ in Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:two_derivative_spn"
+
+\end_inset
+
+ to get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+-\sum_{\ell\in\mathbb{E}}^{\left(0,n-2\right)}m_{\ell}\alpha_{\ell}\left(x\right)-\frac{d}{dx}\left\{ D_{n}\left(x\right)\frac{d}{dx}\Phi_{n}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,n}\left(x\right)\right]\phi_{n}\left(x\right) & =\delta_{n,0}Q\left(x\right),\quad n\in\mathbb{E},
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+or
+\begin_inset Formula 
+\begin{align}
+-\frac{d}{dx}\left\{ D_{n}\left(x\right)\frac{d}{dx}\Phi_{n}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,n}\left(x\right)\right]\phi_{n}\left(x\right) & =\sum_{\ell\in\mathbb{E}}^{\left(0,n-2\right)}m_{\ell}\alpha_{\ell}\left(x\right)+\delta_{n,0}Q\left(x\right),\quad n\in\mathbb{E}.
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Writing out 
+\begin_inset Formula $\alpha_{\ell}\left(x\right)$
+\end_inset
+
+ explicitly gives
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{multline}
+-\frac{d}{dx}\left\{ D_{n}\left(x\right)\frac{d}{dx}\Phi_{n}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,n}\left(x\right)\right]\phi_{n}\left(x\right)\\
+=\sum_{\ell\in\mathbb{E}}^{\left(0,n-2\right)}m_{\ell}\left(\left[\Sigma_{t}\left(x\right)-\Sigma_{s,\ell}\left(x\right)\right]\phi_{\ell}\left(x\right)-\delta_{\ell,0}Q\left(x\right)\right)+\delta_{n,0}Q\left(x\right),\quad n\in\mathbb{E}.
+\end{multline}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Use the recursion relationship developed earlier for 
+\begin_inset Formula $\phi_{n}$
+\end_inset
+
+ in Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:recursive_phi"
+
+\end_inset
+
+ to eliminate it from the equation:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{multline}
+-\frac{d}{dx}\left\{ D_{n}\left(x\right)\frac{d}{dx}\Phi_{n}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,n}\left(x\right)\right]\Phi_{n}\left(x\right)=-\left[\Sigma_{t}\left(x\right)-\Sigma_{s,n}\left(x\right)\right]\sum_{\mathbb{E}\left(\ell\right)}^{\left(n+2,N-1\right)}k_{n\ell}\Phi_{\ell}\left(x\right)\\
++\sum_{\ell\in\mathbb{E}}^{\left(0,n-2\right)}m_{\ell}\left(\left[\Sigma_{t}\left(x\right)-\Sigma_{s,\ell}\left(x\right)\right]\left(\Phi_{\ell}\left(x\right)+\sum_{\mathbb{E}\left(\ell'\right)}^{\left(\ell+2,N-1\right)}k_{\ell\ell'}\Phi_{\ell'}\left(x\right)\right)-\delta_{\ell,0}Q\left(x\right)\right)\\
++\delta_{n,0}Q\left(x\right),\quad n\in\mathbb{E}.\label{eq:summed_spn}
+\end{multline}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The final sum in Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:summed_spn"
+
+\end_inset
+
+ could be simplified to get a linear equation for all the 
+\begin_inset Formula $\Phi_{\ell}$
+\end_inset
+
+ with spatially-dependent coefficients.
+ Note that the derivation of the boundary conditions is not included here,
+ but for 
+\begin_inset Formula $\phi_{n}$
+\end_inset
+
+ are reproduced from Larsen's notes:
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{subequations}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\sum_{m=0}^{N}\frac{2m+1}{2}\left(\int_{0}^{1}\mu P_{n}\left(\mu\right)P_{m}\left(\mu\right)d\mu\right)\phi_{m}\left(0\right) & =\int_{0}^{1}\mu P_{n}\left(\mu\right)\phi^{b}\left(\mu\right)d\mu,\quad n\in\mathbb{E},\quad x=0,\\
+\sum_{m=0}^{N}\frac{2m+1}{2}\left(\int_{-1}^{0}\mu P_{n}\left(\mu\right)P_{m}\left(\mu\right)d\mu\right)\psi_{m}\left(X\right) & =\int_{-1}^{0}\mu P_{n}\left(\mu\right)\phi^{b}\left(\mu\right)d\mu,\quad n\in\mathbb{E},\quad x=X.
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{subequations}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Simplified Forms of the Slab-Geometry 
+\begin_inset Formula $P_{N}$
+\end_inset
+
+ Equations
+\end_layout
+
+\begin_layout Standard
+For 
+\begin_inset Formula $N=1$
+\end_inset
+
+, the equation simplies to 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+-\frac{d}{dx}\left\{ D_{0}\left(x\right)\frac{d}{dx}\Phi_{0}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,0}\left(x\right)\right]\Phi_{0}\left(x\right) & =Q\left(x\right),
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+which is equivalent to
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+-\frac{d}{dx}\left\{ D_{0}\left(x\right)\frac{d}{dx}\phi_{0}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,0}\left(x\right)\right]\phi_{0}\left(x\right) & =Q\left(x\right).
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For 
+\begin_inset Formula $N=3$
+\end_inset
+
+, the equations are
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+-\frac{d}{dx}\left\{ D_{0}\left(x\right)\frac{d}{dx}\Phi_{0}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,0}\left(x\right)\right]\Phi_{0}\left(x\right) & =-\left[\Sigma_{t}\left(x\right)-\Sigma_{s,0}\left(x\right)\right]k_{0,2}\Phi_{2}\left(x\right)+Q\left(x\right),\nonumber \\
+ & =2\left[\Sigma_{t}\left(x\right)-\Sigma_{s,0}\left(x\right)\right]\Phi_{2}\left(x\right)+Q\left(x\right),
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{multline}
+-\frac{d}{dx}\left\{ D_{2}\left(x\right)\frac{d}{dx}\Phi_{2}\left(x\right)\right\} +\left[\Sigma_{t}\left(x\right)-\Sigma_{s,2}\left(x\right)\right]\Phi_{2}\left(x\right)\\
+\begin{aligned} & =m_{0}\left(\left[\Sigma_{t}\left(x\right)-\Sigma_{s,0}\left(x\right)\right]\left(\Phi_{0}\left(x\right)+k_{0,2}\Phi_{2}\left(x\right)\right)-\delta_{0,0}Q\left(x\right)\right)\\
+ & =\frac{2}{5}\left(\left[\Sigma_{t}\left(x\right)-\Sigma_{s,0}\left(x\right)\right]\left(\Phi_{0}\left(x\right)-2\Phi_{2}\left(x\right)\right)-Q\left(x\right)\right).
+\end{aligned}
+\end{multline}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Adjoint form of the 
+\begin_inset Formula $SP_{1}$
+\end_inset
+
+ Equation
+\end_layout
+
+\begin_layout Standard
+The adjoint form of the 
+\begin_inset Formula $SP_{1}$
+\end_inset
+
+ equation is identical to its standard form, but with the scattering matrix
+ transposed.
+ The boundary conditions will be
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\psi\left(0,\mu\right) & =\psi_{0}^{b}\left(\mu\right),\quad0\leq\mu\leq1\\
+\psi\left(X,\mu\right) & =\psi_{X}^{b}\left(\mu\right),\quad-1\leq\mu\leq0
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Use Fick's law to get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\psi\left(x,\mu\right)=\frac{1}{2}\left(\phi\left(x\right)-3D\frac{d}{dx}\phi\left(x\right)\right).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Multiply by 
+\begin_inset Formula $\mu$
+\end_inset
+
+ and integrate:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\int_{0}^{1}\mu\psi\left(0,\mu\right)d\mu & =\frac{1}{2}\int_{0}^{1}\left(\mu\phi\left(0\right)-3D\mu^{2}\frac{d}{dx}\phi\left(x\right)\right)d\mu\\
+J^{+}\left(0\right) & =\frac{1}{2}\left[\frac{1}{2}\phi\left(x\right)-D\frac{d}{dx}\phi\left(x\right)\right].
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The negative signs in the below equations may need reversal, then, for the
+ adjoint problem:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\frac{1}{2}\phi\left(0\right)-D\frac{d}{dx}\phi\left(0\right) & =2J^{+}\left(0\right),\\
+\frac{1}{2}\phi\left(X\right)+D\frac{d}{dx}\phi\left(X\right) & =2J^{-}\left(X\right),
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Discretization of the 
+\begin_inset Formula $SP_{1}$
+\end_inset
+
+ Equation
+\end_layout
+
+\begin_layout Subsection
+\begin_inset Formula $SP_{1}$
+\end_inset
+
+ Equation
+\end_layout
+
+\begin_layout Standard
+The SP1 equation is 
+\begin_inset Formula 
+\begin{equation}
+-\frac{d}{dx}D\left(x\right)\frac{d}{dx}\phi\left(x\right)+\left[\Sigma_{t}\left(x\right)-\Sigma_{s}\left(x\right)\right]\phi\left(x\right)-Q\left(x\right)=0,
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with 
+\begin_inset Formula 
+\begin{equation}
+D\left(x\right)=\left[\Sigma_{t}\left(x\right)-\Sigma_{s,1}\left(x\right)\right]^{-1}.
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Their discretized form will be derived for the energy-independent problem,
+ which is very easily generalizable to the multigroup approximation.
+ 
+\end_layout
+
+\begin_layout Standard
+Convert the equation to local coordinates, with 
+\begin_inset Formula 
+\begin{equation}
+\xi=\frac{\Delta\xi_{i}}{\Delta x_{i}}\left(x-\bar{x}_{i}\right)
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+to get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+-\frac{d}{d\xi}D\left(\xi\right)\frac{d}{d\xi}\phi\left(\xi\right)+\left(\frac{dx}{d\xi}\right)^{2}\left[\Sigma_{t}\left(\xi\right)-\Sigma_{s}\left(\xi\right)\right]\phi\left(\xi\right)-\left(\frac{dx}{d\xi}\right)^{2}Q\left(\xi\right)=0.
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Use the continuous finite element method with linear basis functions, 
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{subequations}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+b_{1} & =\frac{1}{2}\left(1-\xi\right),\\
+b_{2} & =\frac{1}{2}\left(\xi+1\right),
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{subequations}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and identical (Galerkin) weight functions,
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{subequations}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align}
+w_{1} & =\frac{1}{2}\left(1-\xi\right),\\
+w_{2} & =\frac{1}{2}\left(\xi+1\right).
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{subequations}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Operate on the equation by 
+\begin_inset Formula $\int_{-1}^{1}w_{\beta}\left(\xi\right)\left(\cdot\right)d\xi$
+\end_inset
+
+ and integrate by parts to get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+0 & =\int_{-1}^{1}w_{\beta}\left(\xi\right)\left[-\frac{d}{d\xi}\left\{ D\left(\xi\right)\frac{d}{d\xi}\phi\left(\xi\right)\right\} +\left(\frac{dx}{d\xi}\right)^{2}\left[\Sigma_{t}\left(\xi\right)-\Sigma_{s}\left(\xi\right)\right]\phi\left(\xi\right)-\left(\frac{dx}{d\xi}\right)^{2}Q\left(\xi\right)\right]d\xi\nonumber \\
+ & =\int_{-1}^{1}\left[\frac{d}{d\xi}w_{\beta}\left(\xi\right)D\left(\xi\right)\frac{d}{d\xi}\phi\left(\xi\right)+w_{\beta}\left(\xi\right)\left(\frac{dx}{d\xi}\right)^{2}\left[\Sigma_{t}\left(\xi\right)-\Sigma_{s}\left(\xi\right)\right]\phi\left(\xi\right)-w_{\beta}\left(\xi\right)\left(\frac{dx}{d\xi}\right)^{2}Q\left(\xi\right)\right]d\xi\nonumber \\
+ & \qquad-\oint_{\Gamma}w_{\beta}\left(\xi\right)D\left(\xi\right)\frac{d}{d\xi}\phi\left(\xi\right)d\Gamma.\label{eq:boundary_integral}
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note that as this is the continuous finite element method and not its discontinu
+ous counterpart, that the bounds of the integral are only 
+\begin_inset Formula $-1\leq\xi\leq1$
+\end_inset
+
+ because the weight functions are defined on a cellwise basis and are zero
+ outside that cell.
+ The boundary integral is then only pertinent at the edge of the system
+ 
+\begin_inset Formula $\left(\Gamma\right)$
+\end_inset
+
+ and is zero otherwise.
+ Continuing on for the interior cells, expand 
+\begin_inset Formula $\phi\left(\xi\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $Q\left(\xi\right)$
+\end_inset
+
+ out in terms of the basis functions,
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{subequations}
+\end_layout
+
+\end_inset
+
+
+\begin_inset Formula 
+\begin{align}
+\phi\left(\xi\right) & =\sum_{\alpha}b_{\alpha}\left(\xi\right)\tilde{\phi}_{\alpha},\\
+Q\left(\xi\right) & =\sum_{\alpha}b_{\alpha}\left(\xi\right)\tilde{Q}_{\alpha},
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{subequations}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and assume that the material properties are constant in each cell to get
+ (for each 
+\begin_inset Formula $\beta$
+\end_inset
+
+, with the sum over 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ implied)
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+0 & =D_{i}\tilde{\phi}_{\alpha}\int_{-1}^{1}\frac{d}{d\xi}b_{\alpha}\left(\xi\right)\frac{d}{d\xi}w_{\beta}\left(\xi\right)d\xi+\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)^{2}\left[\Sigma_{t,i}-\Sigma_{s,i}\right]\tilde{\phi}_{\alpha}\int_{-1}^{1}b_{\alpha}\left(\xi\right)w_{\beta}\left(\xi\right)d\xi\nonumber \\
+ & \qquad-\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)^{2}\tilde{Q}_{\alpha}\int_{-1}^{1}b_{\alpha}\left(\xi\right)w_{\beta}\left(\xi\right)d\xi\nonumber \\
+ & =D_{i}\tilde{\phi}_{\alpha}k_{\alpha,\beta}+\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)^{2}\left[\Sigma_{t,i}-\Sigma_{s,i}\right]\tilde{\phi}_{\alpha}\ell_{\alpha,\beta}-\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)^{2}\tilde{Q}_{\alpha}\ell_{\alpha,\beta},
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+with 
+\begin_inset Formula 
+\begin{align}
+k_{\alpha,\beta} & =\int_{-1}^{1}\frac{d}{d\xi}b_{\alpha}\left(\xi\right)\frac{d}{d\xi}w_{\beta}\left(\xi\right)d\xi,\\
+\ell_{\alpha,\beta} & =\int_{-1}^{1}b_{\alpha}\left(\xi\right)w_{\beta}\left(\xi\right),
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+or evaluated and matrix form for the defined linear basis and weight functions,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align}
+\bm{k} & =\begin{bmatrix}\frac{1}{2} & -\frac{1}{2}\\
+-\frac{1}{2} & \frac{1}{2}
+\end{bmatrix},\\
+\bm{\ell} & =\begin{bmatrix}\frac{2}{3} & \frac{1}{3}\\
+\frac{1}{3} & \frac{2}{3}
+\end{bmatrix}.
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The matrix system of equations for a single cell with 
+\begin_inset Formula 
+\begin{align}
+\tilde{\bm{Q}} & =\begin{bmatrix}\tilde{Q}_{1}\\
+\tilde{Q}_{2}
+\end{bmatrix},\\
+\tilde{\bm{\phi}} & =\begin{bmatrix}\tilde{\phi}_{1}\\
+\tilde{\phi}_{2}
+\end{bmatrix},
+\end{align}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+and 
+\begin_inset Formula $\Delta\xi_{i}=2$
+\end_inset
+
+ will be
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\left(D_{i}\bm{k}+\frac{1}{4}\left(\Delta x_{i}\right)^{2}\left[\Sigma_{t,i}-\Sigma_{s,i}\right]\bm{\ell}\right)\tilde{\bm{\phi}}=\frac{1}{4}\left(\Delta x_{i}\right)^{2}\bm{\ell}\tilde{\bm{Q}}.
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+\begin_inset Formula $SP_{1}$
+\end_inset
+
+ Boundary Conditions
+\end_layout
+
+\begin_layout Standard
+While the boundary integral in Eq.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:boundary_integral"
+
+\end_inset
+
+ will correct the transport equation appropriately for the edge cells, a
+ simpler approach is to simply remove the equation in the boundary cell
+ for which 
+\begin_inset Formula $w_{\beta}\left(\xi\right)=1$
+\end_inset
+
+ (which will apply to only one equation for the one-dimensional Lagrange
+ basis functions) and enforce the boundary condition directly by discretizing
+ the boundary equation itself.
+ 
+\end_layout
+
+\begin_layout Standard
+The boundary conditions for the SP1 equations are
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\frac{1}{2}\phi\left(0\right)-D\frac{d}{dx}\phi\left(0\right) & =2J^{+}\left(0\right),\\
+\frac{1}{2}\phi\left(X\right)+D\frac{d}{dx}\phi\left(X\right) & =2J^{-}\left(X\right),
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+which in cellwise coordinates are 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\frac{1}{2}\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)\phi\left(-1\right)-D\frac{d}{d\xi}\phi\left(-1\right) & =2\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)J^{+}\left(-1\right),\qquad i=1,\\
+\frac{1}{2}\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)\phi\left(1\right)+D\frac{d}{d\xi}\phi\left(1\right) & =2\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)J^{-}\left(1\right),\qquad i=I.
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This equation can easily be evaluated in terms of the basis functions and
+ their derivatives,
+\begin_inset Formula 
+\begin{align*}
+\frac{d}{d\xi}\phi\left(\xi\right) & =\sum_{\alpha}\frac{d}{d\xi}b_{\alpha}\left(\xi\right)\tilde{\phi}_{\alpha}\\
+ & =-\frac{1}{2}\tilde{\phi}_{1}+\frac{1}{2}\tilde{\phi}_{2},
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+to get
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\frac{1}{2}\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)\tilde{\phi}_{1}-D\left(-\frac{1}{2}\tilde{\phi}_{1}+\frac{1}{2}\tilde{\phi}_{2}\right) & =2\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)J^{+}\left(-1\right),\qquad i=1,\\
+\frac{1}{2}\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)\tilde{\phi}_{2}+D\left(-\frac{1}{2}\tilde{\phi}_{1}+\frac{1}{2}\tilde{\phi}_{2}\right) & =2\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)J^{-}\left(1\right),\qquad i=I,
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+or 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\frac{1}{2}\left[\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)+D\right]\tilde{\phi}_{1}-\frac{1}{2}D\tilde{\phi}_{2} & =2\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)J^{+},\qquad i=1,\\
+-\frac{1}{2}D\tilde{\phi}_{1}+\frac{1}{2}\left[\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)+D\right]\tilde{\phi}_{2} & =2\left(\frac{\Delta x_{i}}{\Delta\xi_{i}}\right)J^{-},\qquad i=I.
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Source Code
+\end_layout
+
+\begin_layout Standard
+\noindent
+\align center
+\begin_inset Tabular
+<lyxtabular version="3" rows="11" columns="2">
+<features rotate="0" islongtable="true" longtabularalignment="center">
+<column alignment="center" valignment="top">
+<column alignment="center" valignment="top" width="80text%">
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Class
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Description
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Manatee
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Main file for running from an input file (working, but not very developed).
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+tst_Manatee
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Includes simple tests for the program (doesn't compare to known results
+ yet).
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Data
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Includes all nuclear data for the problem.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Finite_Element
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Represents a single finite element.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Mesh
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Includes all the finite elements and general data about the problem geometry.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Parser
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Reads data from input and outputs data after calculations.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Ordinates
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Contains the ordinates, weights, and other data for the discrete ordinates
+ 
+\begin_inset Formula $\left(S_{N}\right)$
+\end_inset
+
+ method.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Sn_Transport
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Contains a discontinuous finite element code for spherical and slab geometries.
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+SP1_Transport
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Contains a continuous finite element code for slab geometry with forward
+ and adjoint capabilities.
+ The Trilinos classes Epetra and Amesos handle the sparse matrix storage
+ and linear solution, respectively.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+Transport_Model
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+General class for transport problems.
+ Will eventually be a virtual class for Sn_Transport, SP1_Transport, and
+ any other transport types.
+ 
+\end_layout
+
+\end_inset
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+A few things need work:
+\end_layout
+
+\begin_layout Itemize
+Using virtual functions for the scattering (to make the adjoint calculation
+ efficient) and the other virtual capabilities mentioned in the table above.
+ 
+\end_layout
+
+\begin_layout Itemize
+The data is checked decently, but needs additional safeguards for data whose
+ size changes between methods (the boundary source, for instance, which
+ depends on ordinates for the 
+\begin_inset Formula $S_{N}$
+\end_inset
+
+ calculations but is simply the incoming current for the 
+\begin_inset Formula $SP_{N}$
+\end_inset
+
+ equations).
+ 
+\end_layout
+
+\begin_layout Itemize
+The 
+\begin_inset Formula $SP_{N}$
+\end_inset
+
+ equations in the class SPn_Transport (not included below) need some correcting
+ and possibly need to be recast in a different form.
+ If they're written in the summation form, then it could be possible to
+ solve them iteratively for 
+\begin_inset Formula $\Psi_{n}$
+\end_inset
+
+, where 
+\begin_inset Formula $n\in\mathbb{E}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+The direct Amesos solver from Trilinos should be swapped out for an iterative
+ Belos solver from the same package.
+\end_layout
+
+\begin_layout Itemize
+The Epetra storage isn't parallelized yet, although that should be a relatively
+ easy task once a parallel solver from Belos is implemented.
+\end_layout
+
+\end_body
+\end_document

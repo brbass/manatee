@@ -1,0 +1,71 @@
+%% This BibTeX bibliography file was created using BibDesk.
+%% http://bibdesk.sourceforge.net/
+
+
+%% Created for Brody Bassett at 2015-04-28 00:57:15 -0400 
+
+
+%% Saved with string encoding Unicode (UTF-8) 
+
+
+
+@techreport{heroux2003overview,
+	Author = {Heroux, Michael and Bartlett, Roscoe and Hoekstra, Vicki Howle Robert and Hu, Jonathan and Kolda, Tamara and Lehoucq, Richard and Long, Kevin and Pawlowski, Roger and Phipps, Eric and Salinger, Andrew and others},
+	Date-Added = {2015-04-28 04:57:04 +0000},
+	Date-Modified = {2015-04-28 04:57:04 +0000},
+	Institution = {Technical Report SAND2003-2927, Sandia National Laboratories},
+	Title = {An overview of Trilinos},
+	Year = {2003}}
+
+@article{heroux2005overview,
+	Author = {Heroux, Michael A and Bartlett, Roscoe A and Howle, Vicki E and Hoekstra, Robert J and Hu, Jonathan J and Kolda, Tamara G and Lehoucq, Richard B and Long, Kevin R and Pawlowski, Roger P and Phipps, Eric T and others},
+	Date-Added = {2015-04-28 04:55:36 +0000},
+	Date-Modified = {2015-04-28 04:55:36 +0000},
+	Journal = {ACM Transactions on Mathematical Software (TOMS)},
+	Number = {3},
+	Pages = {397--423},
+	Publisher = {ACM},
+	Title = {An overview of the Trilinos project},
+	Volume = {31},
+	Year = {2005}}
+
+@book{heroux2003trilinos,
+	Author = {Heroux, Michael Allen and Willenbring, James M},
+	Date-Added = {2015-04-28 04:55:26 +0000},
+	Date-Modified = {2015-04-28 04:55:26 +0000},
+	Publisher = {Citeseer},
+	Title = {Trilinos users guide},
+	Year = {2003}}
+
+@article{lewis1984computational,
+	Author = {Lewis, Elmer Eugene and Miller, Warren F},
+	Date-Added = {2015-04-27 00:43:45 +0000},
+	Date-Modified = {2015-04-27 00:43:45 +0000},
+	Publisher = {John Wiley and Sons, Inc., New York, NY},
+	Title = {Computational methods of neutron transport},
+	Year = {1984}}
+
+@article{martinPhase,
+	Author = {William R. Martin, Carl E. Yehnert, Leonard Lorence and James J. Duderstadt},
+	Date-Added = {2015-04-21 18:40:53 +0000},
+	Date-Modified = {2015-04-21 18:42:29 +0000},
+	Journal = {Annals of Nuclear Energy},
+	Title = {Phase-Space Finite Element Methods Applied to the First-Order Form of the Transport Equation},
+	Year = {1981}}
+
+@article{martinFinite,
+	Author = {William R. Martin and James J. Duderstadt},
+	Date-Added = {2015-04-21 18:39:21 +0000},
+	Date-Modified = {2015-04-21 18:40:40 +0000},
+	Journal = {Nuclear Science and Engineering},
+	Title = {Finite Element Solutions of the Neutron Transport Equation with Applications to Strong Heterogeneities},
+	Year = {1977}}
+
+@article{mercimekDiscontinuous,
+	Author = {Mehmet Mercimek and H. Atilla {\"O}zgener},
+	Date-Added = {2015-04-21 18:23:58 +0000},
+	Date-Modified = {2015-04-28 04:16:26 +0000},
+	Journal = {Annals of Nuclear Energy},
+	Title = {Discontinuous finite element formulations for neutron transport in spherical geometry},
+	Year = {2014},
+	Bdsk-File-1 = {YnBsaXN0MDDUAQIDBAUGJCVYJHZlcnNpb25YJG9iamVjdHNZJGFyY2hpdmVyVCR0b3ASAAGGoKgHCBMUFRYaIVUkbnVsbNMJCgsMDxJXTlMua2V5c1pOUy5vYmplY3RzViRjbGFzc6INDoACgAOiEBGABIAFgAdccmVsYXRpdmVQYXRoWWFsaWFzRGF0YV8QKmFydGljbGVzLzEtczIuMC1TMDMwNjQ1NDkxMzAwNTQyMi1tYWluLnBkZtIXCxgZV05TLmRhdGFPEQIuAAAAAAIuAAIAAAxNYWNpbnRvc2ggSEQAAAAAAAAAAAAAAAAAAADP0/KGSCsAAAEFe6sfMS1zMi4wLVMwMzA2NDU0OTEzMCMxM0E0OEEwLnBkZgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATpIoNE4+C0AAAAAAAAAAAABAAMAAAkgAAAAAAAAAAAAAAAAAAAACGFydGljbGVzABAACAAAz9QqxgAAABEACAAA0TkwbQAAAAEAIAEFe6sBBXuqAQV7GwEFafQBBWndAAoQcgAKEHEAAmb5AAIAck1hY2ludG9zaCBIRDpVc2VyczoAYnJiYXNzOgBEb2N1bWVudHM6AGNvbGxlZ2UzOgBjbGFzc2VzOgBuZXJzNTYxOgBwcm9qOgBhcnRpY2xlczoAMS1zMi4wLVMwMzA2NDU0OTEzMCMxM0E0OEEwLnBkZgAOAEQAIQAxAC0AcwAyAC4AMAAtAFMAMAAzADAANgA0ADUANAA5ADEAMwAwADAANQA0ADIAMgAtAG0AYQBpAG4ALgBwAGQAZgAPABoADABNAGEAYwBpAG4AdABvAHMAaAAgAEgARAASAF9Vc2Vycy9icmJhc3MvRG9jdW1lbnRzL2NvbGxlZ2UzL2NsYXNzZXMvbmVyczU2MS9wcm9qL2FydGljbGVzLzEtczIuMC1TMDMwNjQ1NDkxMzAwNTQyMi1tYWluLnBkZgAAEwABLwAAFQACAA3//wAAgAbSGxwdHlokY2xhc3NuYW1lWCRjbGFzc2VzXU5TTXV0YWJsZURhdGGjHR8gVk5TRGF0YVhOU09iamVjdNIbHCIjXE5TRGljdGlvbmFyeaIiIF8QD05TS2V5ZWRBcmNoaXZlctEmJ1Ryb290gAEACAARABoAIwAtADIANwBAAEYATQBVAGAAZwBqAGwAbgBxAHMAdQB3AIQAjgC7AMAAyAL6AvwDAQMMAxUDIwMnAy4DNwM8A0kDTANeA2EDZgAAAAAAAAIBAAAAAAAAACgAAAAAAAAAAAAAAAAAAANo}}

@@ -1,0 +1,4 @@
+import numpy as np
+from matplotlib import pyplot as plt
+
+u235 = np.loadtxt(u235.out, skiplines=1)
